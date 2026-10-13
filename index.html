@@ -1,0 +1,2270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GELIS DIGITAL - SDN Gupit Gedangsari</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Firebase JS SDKs (v11.6.1) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs, updateDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'gelis-digital-green-8be62';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyBNEqzDeuhSBVMOUsHrWaazAZDlYNfXfuY",
+            authDomain: "green-8be62.firebaseapp.com",
+            projectId: "green-8be62",
+            storageBucket: "green-8be62.firebasestorage.app",
+            messagingSenderId: "270351403841",
+            appId: "1:270351403841:web:a1fbf98f48655bd2b8efc0"
+        };
+
+        let app_firebase, auth, db;
+        try {
+            app_firebase = initializeApp(firebaseConfig);
+            auth = getAuth(app_firebase);
+            db = getFirestore(app_firebase);
+            window.firebaseReady = true;
+            console.log("Firebase berhasil diinisialisasi untuk green-8be62");
+        } catch (e) {
+            console.warn("Firebase init skipped/failed, using robust local mode:", e);
+            window.firebaseReady = false;
+        }
+
+        window.fbAuth = auth;
+        window.fbDb = db;
+        window.fbSignInAnonymously = signInAnonymously;
+        window.fbSignInWithCustomToken = signInWithCustomToken;
+        window.fbSignOut = signOut;
+        window.fbDoc = doc;
+        window.fbGetDoc = getDoc;
+        window.fbSetDoc = setDoc;
+        window.fbUpdateDoc = updateDoc;
+        window.fbDeleteDoc = deleteDoc;
+        window.fbCollection = collection;
+        window.fbGetDocs = getDocs;
+        window.fbOnSnapshot = onSnapshot;
+        window.fbWriteBatch = writeBatch;
+        window.fbAppId = appId;
+        window.initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+    </script>
+
+    <!-- html2pdf for PDF Export in RPP Generator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- SheetJS for Client-Side Excel Parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        forest: { DEFAULT: '#2C5F2D', dark: '#1A3C1B', light: '#437C45' },
+                        gold: { DEFAULT: '#C5A059', light: '#DFBD73', dark: '#9E7E3C' },
+                        sage: { DEFAULT: '#A3B899', light: '#C1D1B8', lighter: '#E8EFE5' },
+                        cream: { DEFAULT: '#FBF9F1', dark: '#F2EDE0' },
+                        ivory: { DEFAULT: '#FFFFF0' }
+                    },
+                    boxShadow: { 'luxury': '0 10px 30px -5px rgba(44, 95, 45, 0.08)' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #FFFFF0; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .page-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .page-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        @media (max-width: 768px) {
+            #sidebar { transform: translateX(-100%); }
+            #sidebar.open { transform: translateX(0); }
+        }
+        @media print {
+            aside, header, button:not(.print-show), #sidebar-overlay, .no-print { display: none !important; }
+            main { padding: 0 !important; overflow: visible !important; height: auto !important; }
+            .page-section { animation: none !important; display: block !important; }
+            body { background-color: white !important; }
+            .shadow-sm, .shadow-luxury { box-shadow: none !important; border: none !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .page-break-before { page-break-before: always; }
+            .page-break-inside-avoid { page-break-inside: avoid; }
+        }
+        .role-guru-only.hidden, .role-kepsek-only.hidden { display: none !important; }
+        #rpp-document-output[contenteditable="true"] { outline: none; }
+        #rpp-document-output[contenteditable="true"]:focus { box-shadow: 0 0 0 3px rgba(44, 95, 45, 0.3); border-color: #2C5F2D; border-radius: 8px; }
+    </style>
+</head>
+<body class="text-gray-800 antialiased h-screen flex overflow-hidden bg-ivory">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="bg-forest-dark text-white w-64 flex-shrink-0 fixed md:relative z-30 h-full flex flex-col shadow-xl print:hidden border-r border-forest/25">
+        <div class="p-5 flex items-center justify-between border-b border-forest/30 bg-forest/40">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gold text-forest-dark rounded-xl flex items-center justify-center font-bold text-lg shadow-inner flex-shrink-0">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-xl tracking-wide text-ivory leading-none mb-1">GELIS</h1>
+                    <p class="text-[10px] text-sage-lighter font-medium leading-tight mb-0.5">Green Eco Learning System</p>
+                    <p class="text-[9px] text-gold-light uppercase tracking-widest font-bold">SDN Gupit Gedangsari</p>
+                </div>
+            </div>
+            <button id="close-sidebar" class="md:hidden text-gray-300 hover:text-white">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <div class="px-4 py-2.5 bg-forest/30 border-b border-forest/25 flex flex-col gap-1.5 text-xs">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span id="connection-status-dot" class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
+                    <span id="connection-status-label" class="text-xs font-semibold text-ivory">Mode Mandiri (Lokal)</span>
+                </div>
+                <button onclick="app.showApiKeyModal()" class="text-[10px] bg-gold/20 text-gold-light px-1.5 py-0.5 rounded font-mono hover:bg-gold/30" title="API Key Google Gemini">
+                    <i class="fas fa-key"></i> API Key
+                </button>
+            </div>
+            <div id="sync-status-badge" class="hidden text-[10px] bg-orange-500/20 text-orange-200 px-2 py-0.5 rounded font-medium flex justify-between items-center">
+                <span id="sync-status-text">Menyimpan lokal...</span>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-3 hide-scrollbar space-y-1 px-2">
+            <ul id="nav-menu" class="space-y-1"></ul>
+        </nav>
+
+        <div class="p-3 border-t border-forest/30 text-[10px] text-sage-light bg-forest/10 flex flex-col gap-2">
+            <div class="flex justify-between items-center">
+                <span id="current-user-info" class="truncate font-medium text-ivory">Belum Login</span>
+                <button id="auth-action-btn" onclick="app.showAuthModal()" class="text-gold-light hover:underline font-bold">Login</button>
+            </div>
+            <div class="flex justify-between items-center pt-1 border-t border-forest/20">
+                <span>&copy; 2026 GELIS v15.0</span>
+                <button onclick="app.showSettingsModal()" class="text-gold-light hover:underline"><i class="fas fa-database"></i> Backup/Impor</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- API KEY CONFIGURATION MODAL -->
+    <div id="apikey-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="font-bold text-base text-forest-dark flex items-center gap-2"><i class="fas fa-key text-gold"></i> Konfigurasi Gemini API Key</h3>
+                <button onclick="app.hideApiKeyModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <p class="text-xs text-gray-600 leading-relaxed">
+                Masukkan API Key Google Gemini Anda untuk mengaktifkan fitur Asisten AI di dalam aplikasi GELIS DIGITAL.
+            </p>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Gemini API Key</label>
+                    <input type="password" id="gemini-apikey-input" placeholder="AIzaSy..." class="w-full border rounded-lg p-2.5 text-xs outline-none">
+                </div>
+            </div>
+            <div class="border-t pt-3 flex justify-end gap-2">
+                <button onclick="app.saveApiKey()" class="px-4 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark">Simpan API Key</button>
+                <button onclick="app.hideApiKeyModal()" class="px-4 py-2 bg-gray-200 text-gray-700 text-xs font-bold rounded-lg">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-sage-lighter space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="font-bold text-base text-forest-dark flex items-center gap-2"><i class="fas fa-database text-gold"></i> Manajemen Data</h3>
+                <button onclick="app.hideSettingsModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <p class="text-xs text-gray-600 leading-relaxed">
+                Data disimpan secara aman di perangkat lokal (IndexedDB). Anda dapat mengunduh cadangan atau memulihkan data dari file JSON kapan saja.
+            </p>
+            <div class="space-y-3 pt-2">
+                <div class="grid grid-cols-1 gap-2">
+                    <button onclick="app.exportData()" class="py-2.5 bg-forest text-white rounded-xl text-xs font-bold hover:bg-forest-dark shadow transition flex items-center justify-center gap-2">
+                        <i class="fas fa-download"></i> Ekspor Cadangan (.JSON)
+                    </button>
+                </div>
+                <div class="relative">
+                    <label class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold cursor-pointer transition flex items-center justify-center gap-2 border">
+                        <i class="fas fa-upload"></i> Impor & Validasi File JSON
+                        <input type="file" id="import-file" accept=".json" onchange="app.previewImport(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+            <div id="import-preview-box" class="hidden bg-gray-50 p-4 rounded-xl border text-xs space-y-2">
+                <h4 class="font-bold text-forest-dark">Pratinjau Validasi Impor:</h4>
+                <p id="import-preview-summary" class="text-gray-600"></p>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button onclick="app.cancelImport()" class="px-3 py-1 bg-gray-200 text-gray-700 rounded">Batal</button>
+                    <button onclick="app.confirmImport()" class="px-3 py-1 bg-forest text-white font-bold rounded">Konfirmasi & Gabungkan</button>
+                </div>
+            </div>
+            <div class="border-t pt-3 flex justify-end">
+                <button onclick="app.hideSettingsModal()" class="px-4 py-2 bg-gray-200 text-gray-700 text-xs font-bold rounded-lg">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTH MODAL -->
+    <div id="auth-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-sage-lighter space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="font-bold text-base text-forest-dark flex items-center gap-2"><i class="fas fa-user-lock text-gold"></i> Login GELIS</h3>
+                <button onclick="app.hideAuthModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <div id="auth-form-container" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="auth-email" placeholder="guru@gelis.sch.id" class="w-full border rounded-lg p-2.5 text-xs outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Kata Sandi</label>
+                    <input type="password" id="auth-password" placeholder="••••••••" class="w-full border rounded-lg p-2.5 text-xs outline-none">
+                </div>
+                <div id="auth-error-msg" class="text-red-600 text-xs font-semibold hidden"></div>
+                <button onclick="app.handleLogin()" class="w-full py-2.5 bg-forest text-white rounded-xl text-xs font-bold hover:bg-forest-dark shadow transition">Masuk (Login)</button>
+            </div>
+            <div id="logged-in-container" class="hidden space-y-3 text-center">
+                <p class="text-xs text-gray-600">Anda masuk sebagai: <b id="logged-email" class="text-forest"></b></p>
+                <div class="p-2 bg-forest/10 rounded-lg text-xs font-bold text-forest-dark" id="logged-role-badge">Peran: Guru</div>
+                <button onclick="app.handleLogout()" class="w-full py-2.5 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-700 shadow transition">Keluar (Logout)</button>
+            </div>
+            <div class="border-t pt-3 flex justify-end">
+                <button onclick="app.hideAuthModal()" class="px-4 py-2 bg-gray-200 text-gray-700 text-xs font-bold rounded-lg">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN WRAPPER -->
+    <div class="flex-1 flex flex-col h-full w-full bg-cream overflow-hidden relative">
+        <div id="sidebar-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-20 hidden md:hidden"></div>
+
+        <header class="bg-white/90 backdrop-blur shadow-sm border-b border-sage-lighter px-4 sm:px-6 py-4 flex flex-col xl:flex-row xl:items-center justify-between z-10 flex-shrink-0 print:hidden gap-3 xl:gap-0">
+            <div class="flex items-start sm:items-center gap-4">
+                <button id="open-sidebar" class="md:hidden text-forest-dark hover:text-gold focus:outline-none mt-1 sm:mt-0">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <div>
+                    <span id="header-breadcrumb" class="text-[10px] sm:text-xs font-bold text-forest block leading-tight">Inovasi Kepemimpinan Berbasis Data, Lingkungan sebagai Sumber Belajar</span>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-2 mt-0.5">
+                        <h2 id="header-title" class="font-bold text-forest-dark text-lg sm:text-xl">Dashboard</h2>
+                        <span class="text-[10px] font-medium text-gray-500">
+                            <span class="hidden sm:inline">|</span> Pendekatan Pembelajaran Mendalam (PM) • Berkesadaran • Bermakna • Menggembirakan
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 self-end xl:self-auto">
+                <div class="flex items-center gap-2 bg-cream-dark px-3 py-1.5 rounded-xl border border-sage-light text-xs">
+                    <span class="text-gray-500 font-medium">Peran Aktif:</span>
+                    <select id="active-role-selector" onchange="app.switchRole(this.value)" class="bg-white font-bold text-forest border rounded px-2 py-0.5 outline-none">
+                        <option value="guru">Guru (Pelaksana)</option>
+                        <option value="kepsek">Kepala Sekolah (Pemimpin)</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-4 lg:p-8">
+            <div class="max-w-6xl mx-auto pb-12 space-y-6">
+                
+                <section id="page-dashboard" class="page-section active">
+                    <div class="mb-6 border-b border-sage-light pb-4 flex flex-wrap justify-between items-center gap-4">
+                        <div>
+                            <h2 class="text-3xl font-bold text-forest-dark" id="dash-greeting-title">Dashboard Pembelajaran (Guru)</h2>
+                            <p class="text-gray-600 text-sm mt-1" id="dash-greeting-desc">Fokus perbaikan pembelajaran mandiri dan tanggapan umpan balik.</p>
+                        </div>
+                        <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border shadow-sm">
+                            <span class="text-xs font-bold text-forest">Siklus Aktif:</span>
+                            <span id="dash-active-cycle-name" class="text-xs font-semibold bg-forest/10 text-forest px-2.5 py-1 rounded-lg">Belum ada siklus</span>
+                        </div>
+                    </div>
+
+                    <div id="dash-content-guru" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-white rounded-2xl shadow-luxury border border-sage-lighter p-6">
+                                <span class="text-[10px] font-bold text-forest uppercase tracking-wider block mb-1">Kondisi Awal (D.1)</span>
+                                <h3 class="text-base font-bold text-forest-dark mb-3">Rapor Pendidikan</h3>
+                                <div class="text-3xl font-bold text-forest mb-1" id="dash-skor-rapor">Belum ada data</div>
+                                <p class="text-xs text-gray-500">SDN Gupit Gedangsari</p>
+                            </div>
+                            <div class="bg-white rounded-2xl shadow-luxury border border-sage-lighter p-6">
+                                <span class="text-[10px] font-bold text-forest uppercase tracking-wider block mb-1">Siklus PDCA Pribadi</span>
+                                <h3 class="text-base font-bold text-forest-dark mb-3" id="dash-cycle-title">-</h3>
+                                <div class="space-y-1 text-xs text-gray-600" id="dash-cycle-summary">
+                                    <p><strong>Akar Masalah:</strong> -</p>
+                                    <p><strong>Status:</strong> <span class="text-gray-400 font-bold">Belum ada</span></p>
+                                </div>
+                                <div class="mt-4 pt-3 border-t flex justify-between items-center">
+                                    <span class="text-[10px] text-gray-400 font-mono" id="dash-cycle-count">Total Siklus: 0</span>
+                                    <button onclick="app.navigate('act')" class="text-xs text-forest font-bold hover:underline">Kelola &rarr;</button>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-2xl shadow-luxury border border-sage-lighter p-6 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[10px] font-bold text-forest uppercase tracking-wider block mb-1">Umpan Balik / Coaching</span>
+                                    <h3 class="text-base font-bold text-forest-dark mb-3">Catatan Kepala Sekolah</h3>
+                                    <div id="dash-teacher-feedback-summary" class="text-xs text-gray-600 leading-relaxed">
+                                        Belum ada data
+                                    </div>
+                                </div>
+                                <div class="mt-4 pt-3 border-t flex justify-end">
+                                    <button onclick="app.navigate('act')" class="text-xs text-forest font-bold hover:underline">Tindak Lanjuti &rarr;</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="dash-content-kepsek" class="space-y-6 hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="bg-white p-5 rounded-2xl shadow-luxury border">
+                                <span class="text-[10px] font-bold text-forest uppercase">Total Guru Aktif</span>
+                                <div class="text-2xl font-bold text-forest-dark mt-1" id="kepsek-stat-teachers">0</div>
+                            </div>
+                            <div class="bg-white p-5 rounded-2xl shadow-luxury border">
+                                <span class="text-[10px] font-bold text-forest uppercase">Siklus PDCA Berjalan</span>
+                                <div class="text-2xl font-bold text-forest-dark mt-1" id="kepsek-stat-cycles">0</div>
+                            </div>
+                            <div class="bg-white p-5 rounded-2xl shadow-luxury border">
+                                <span class="text-[10px] font-bold text-forest uppercase">Observasi Selesai</span>
+                                <div class="text-2xl font-bold text-forest-dark mt-1" id="kepsek-stat-obs">0</div>
+                            </div>
+                            <div class="bg-white p-5 rounded-2xl shadow-luxury border">
+                                <span class="text-[10px] font-bold text-forest uppercase">Rapor D.1 Sekolah</span>
+                                <div class="text-2xl font-bold text-forest-dark mt-1" id="kepsek-stat-rapor">Belum ada</div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-luxury border">
+                            <h3 class="font-bold text-forest-dark mb-3"><i class="fas fa-clipboard-check text-gold mr-2"></i> Ringkasan Progres Guru & Supervisi</h3>
+                            <div id="kepsek-teachers-progress-list" class="space-y-3 text-xs">Belum ada data progres guru.</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-data" class="page-section">
+                    <div class="mb-6 border-b border-sage-light pb-4">
+                        <h2 class="text-2xl font-bold text-forest-dark">DATA — Identifikasi Masalah</h2>
+                        <p class="text-gray-600 text-sm mt-1">Pencatatan Rapor Pendidikan D.1 dan tiga instrumen pengukuran awal/akhir.</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter mb-6">
+                        <div class="flex justify-between items-center mb-4 border-b pb-3">
+                            <div>
+                                <h3 class="font-bold text-forest-dark">Rapor Pendidikan (D.1 Kualitas Pembelajaran)</h3>
+                                <p class="text-xs text-gray-500">Data Master Sekolah</p>
+                            </div>
+                            <button onclick="app.saveRapor()" class="px-4 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark shadow role-kepsek-only"><i class="fas fa-save mr-1"></i> Simpan Rapor</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Tahun Data</label>
+                                <input type="number" id="rapor-tahun" class="w-full border rounded-lg p-2.5 text-sm outline-none bg-gray-50">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Skor D.1 Kualitas Pembelajaran</label>
+                                <input type="number" step="0.01" id="rapor-skor" class="w-full border rounded-lg p-2.5 text-sm font-bold text-forest outline-none bg-gray-50">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter">
+                        <div class="flex flex-wrap justify-between items-center mb-4 border-b pb-3 gap-2">
+                            <div>
+                                <h3 class="font-bold text-forest-dark">Tiga Instrumen Pengukuran Guru</h3>
+                                <p class="text-xs text-gray-500">Praktik Pembelajaran, Perangkat Pembelajaran, dan Observasi.</p>
+                            </div>
+                            <button onclick="app.showAsesmenForm()" class="px-4 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark shadow role-kepsek-only"><i class="fas fa-plus mr-1"></i> Tambah Pengukuran</button>
+                        </div>
+                        <div id="asesmen-list-view" class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 text-gray-600 text-xs border-b">
+                                        <th class="p-3 font-semibold">Guru & Tgl Aktivitas</th>
+                                        <th class="p-3 font-semibold">Instrumen</th>
+                                        <th class="p-3 font-semibold text-center">Fase</th>
+                                        <th class="p-3 font-semibold text-center">Skor</th>
+                                        <th class="p-3 font-semibold text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="asesmen-table-body" class="text-sm divide-y divide-gray-100"></tbody>
+                            </table>
+                        </div>
+
+                        <div id="asesmen-form-view" class="hidden bg-gray-50 p-5 rounded-xl border mt-4">
+                            <h4 class="font-bold text-sm mb-3 text-forest-dark">Formulir Pengukuran Guru (Akses Kepala Sekolah)</h4>
+                            <form id="form-asesmen" onsubmit="app.saveAsesmen(event)">
+                                <input type="hidden" id="as-id">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div><label class="block text-xs font-medium mb-1">Nama / Kode Guru</label><input type="text" id="as-guru" required class="w-full border rounded p-2 text-sm" placeholder="Cth: Siti Rahma, S.Pd"></div>
+                                    <div><label class="block text-xs font-medium mb-1">Tanggal Aktivitas (Manual)</label><input type="date" id="as-tgl" required class="w-full border rounded p-2 text-sm"></div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div>
+                                        <label class="block text-xs font-medium mb-1">Pilih Instrumen</label>
+                                        <select id="as-instrumen" class="w-full border rounded p-2 text-sm">
+                                            <option value="Praktik Pembelajaran">1. Asesmen Praktik Pembelajaran Guru</option>
+                                            <option value="Perangkat Pembelajaran">2. Analisis Perangkat Pembelajaran</option>
+                                            <option value="Observasi Pembelajaran">3. Observasi Pembelajaran</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium mb-1">Fase Pengukuran</label>
+                                        <select id="as-fase" class="w-full border rounded p-2 text-sm font-bold text-forest">
+                                            <option value="Awal">Kondisi Awal</option>
+                                            <option value="Akhir">Kondisi Akhir</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div><label class="block text-xs font-medium mb-1">Indikator Utama</label><input type="text" id="as-indikator" required class="w-full border rounded p-2 text-sm" placeholder="Cth: Keterlibatan aktif siswa"></div>
+                                    <div><label class="block text-xs font-medium mb-1">Skor (0 - 100)</label><input type="number" id="as-skor" required min="0" max="100" class="w-full border rounded p-2 text-sm font-bold"></div>
+                                </div>
+                                <div class="mb-4"><label class="block text-xs font-medium mb-1">Catatan Temuan & Rekomendasi</label><textarea id="as-catatan" rows="2" class="w-full border rounded p-2 text-sm" placeholder="Catatan temuan ringkas..."></textarea></div>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" onclick="app.hideAsesmenForm()" class="px-4 py-2 border rounded text-xs">Batal</button>
+                                    <button type="submit" class="px-4 py-2 bg-forest text-white rounded text-xs font-bold">Simpan Pengukuran</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-plan" class="page-section">
+                    <div class="mb-6 border-b border-sage-light pb-4 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-forest rounded-full flex items-center justify-center shadow-md">
+                                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-forest-dark">01 PLAN — Perencanaan Perbaikan</h2>
+                                <p class="text-gray-600 text-sm mt-1">GELIS DIGITAL: Hubungan Kaskade Data Rapor PBD 2025.</p>
+                            </div>
+                        </div>
+                        <div class="bg-forest/10 px-3 py-1.5 rounded-lg border border-forest/20 text-xs font-bold text-forest" id="plan-cycle-badge">Siklus Aktif: Belum ada</div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter">
+                        <div class="flex flex-wrap justify-between items-center mb-4 border-b pb-3 gap-2">
+                            <div>
+                                <h3 class="font-bold text-forest-dark">Daftar Rencana Perbaikan (PLAN)</h3>
+                                <p class="text-xs text-gray-500">Dikelola mandiri oleh guru berdasarkan Rapor Pendidikan.</p>
+                            </div>
+                            <button onclick="app.showPlanForm()" class="px-4 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark shadow role-guru-only"><i class="fas fa-plus mr-1"></i> Rencana Baru</button>
+                        </div>
+                        <div id="plan-list-view" class="space-y-4"></div>
+
+                        <div id="plan-form-view" class="hidden bg-gray-50 p-5 rounded-xl border mt-4">
+                            <div id="pbd-upload-section" class="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div>
+                                    <h4 class="font-bold text-sm text-blue-800"><i class="fas fa-file-excel mr-1"></i> Sinkronisasi File Rapor PBD 2025</h4>
+                                    <p class="text-xs text-blue-600 mt-1">Unggah file Excel (Sheet 2.2) untuk mengimpor parameter secara otomatis. Data akan disimpan secara lokal di perangkat Anda.</p>
+                                </div>
+                                <div>
+                                    <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded-lg shadow transition whitespace-nowrap">
+                                        Unggah .xlsx
+                                        <input type="file" class="hidden" accept=".xlsx, .xls" onchange="app.handlePBDUpload(event)">
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div id="pbd-status-indicator" class="hidden text-xs bg-green-100 text-green-800 px-3 py-1.5 rounded mb-4 font-bold border border-green-200">
+                                <i class="fas fa-check-circle mr-1"></i> Menggunakan Data Rapor PBD Tersimpan
+                            </div>
+
+                            <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
+                                <h4 class="font-bold text-base text-forest-dark">Formulir Rencana Perbaikan (PLAN)</h4>
+                            </div>
+
+                            <form id="form-plan" onsubmit="app.savePlan(event)">
+                                <input type="hidden" id="plan-id">
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6 bg-white p-3 rounded-xl border shadow-sm">
+                                    <div>
+                                        <label class="block text-xs font-medium mb-1">Penanggung Jawab (PIC)</label>
+                                        <input type="text" id="plan-pic" required class="w-full border rounded p-2 text-sm bg-gray-50 font-bold" placeholder="Nama Guru">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium mb-1">Tanggal Rencana</label>
+                                        <input type="date" id="plan-tanggal" required class="w-full border rounded p-2 text-sm bg-gray-50 font-bold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium mb-1">Status Rencana</label>
+                                        <select id="plan-status" class="w-full border rounded p-2 text-sm font-bold bg-gray-50 text-forest">
+                                            <option value="Direncanakan (Draf)">Direncanakan (Draf)</option>
+                                            <option value="Sedang Berjalan">Sedang Berjalan</option>
+                                            <option value="Selesai">Selesai</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4 bg-white p-4 rounded-lg border border-gray-200">
+                                    <label class="block text-sm font-bold text-forest-dark mb-2">A. Indikator Prioritas (Rapor Pendidikan)</label>
+                                    <select id="plan-indikator-select" class="w-full border rounded-lg p-2 text-sm font-bold outline-none focus:ring-1 focus:ring-forest bg-gray-50" onchange="app.onPlanIndikatorChange()">
+                                        <option value="">-- Pilih Indikator --</option>
+                                    </select>
+                                    <div id="plan-skor-display" class="mt-2 text-sm">
+                                        <span class="text-gray-500 italic text-xs">Pilih indikator untuk melihat skor/capaian.</span>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="block text-sm font-bold text-forest-dark mb-2">B. Akar Masalah (Terkait Indikator)</label>
+                                    <div id="plan-akar-container" class="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-4 text-xs bg-white p-3 rounded-lg border border-gray-200 min-h-[50px]">
+                                        <span class="text-gray-400 italic">Pilih indikator terlebih dahulu.</span>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="block text-sm font-bold text-forest-dark mb-2">C. Data Pendukung Masalah</label>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-4 text-xs bg-white p-3 rounded-lg border border-gray-200">
+                                        <label class="flex items-start gap-2 cursor-pointer hover:text-forest transition"><input type="checkbox" name="plan_data" value="Rapor Pendidikan Tahun 2025" class="mt-0.5 text-forest focus:ring-forest"> Rapor Pendidikan Tahun 2025</label>
+                                        <label class="flex items-start gap-2 cursor-pointer hover:text-forest transition"><input type="checkbox" name="plan_data" value="Hasil asesmen praktik pembelajaran guru" class="mt-0.5 text-forest focus:ring-forest"> Hasil asesmen praktik pembelajaran guru</label>
+                                        <label class="flex items-start gap-2 cursor-pointer hover:text-forest transition"><input type="checkbox" name="plan_data" value="Hasil analisis perangkat pembelajaran" class="mt-0.5 text-forest focus:ring-forest"> Hasil analisis perangkat pembelajaran</label>
+                                        <label class="flex items-start gap-2 cursor-pointer hover:text-forest transition"><input type="checkbox" name="plan_data" value="Hasil observasi pembelajaran" class="mt-0.5 text-forest focus:ring-forest"> Hasil observasi pembelajaran</label>
+                                        <label class="flex items-start gap-2 cursor-pointer hover:text-forest transition"><input type="checkbox" name="plan_data" value="Hasil refleksi guru / diskusi komunitas belajar" class="mt-0.5 text-forest focus:ring-forest"> Hasil refleksi / diskusi komunitas belajar</label>
+                                        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="plan_data" value="Lainnya" class="text-forest focus:ring-forest" onchange="document.getElementById('plan_data_lain').classList.toggle('hidden', !this.checked)"> Lainnya</label>
+                                    </div>
+                                    <input type="text" id="plan_data_lain" class="w-full border rounded p-2 text-xs mt-2 hidden" placeholder="Tulis data tambahan (misal: observasi lokal)...">
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="block text-sm font-bold text-forest-dark mb-2">D. Tujuan Perbaikan</label>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-4 text-xs bg-white p-3 rounded-lg border border-gray-200">
+                                        <label class="flex items-start gap-2 cursor-pointer hover:text-forest transition"><input type="checkbox" name="plan_tujuan" value="Meningkatkan kualitas interaksi antara guru, murid, dan materi pembelajaran." class="mt-0.5 text-forest focus:ring-forest"> Meningkatkan kualitas interaksi antara guru, murid, dan materi pembelajaran.</label>
+                                        <label class="flex items-start gap-2 cursor-pointer hover:text-forest transition"><input type="checkbox" name="plan_tujuan" value="Meningkatkan keterampilan guru dalam mengelola kelas." class="mt-0.5 text-forest focus:ring-forest"> Meningkatkan keterampilan guru dalam mengelola kelas.</label>
+                                        <label class="flex items-start gap-2 cursor-pointer hover:text-forest transition"><input type="checkbox" name="plan_tujuan" value="Meningkatkan kompetensi guru melalui komunitas belajar dan refleksi pembelajaran." class="mt-0.5 text-forest focus:ring-forest"> Meningkatkan kompetensi guru melalui komunitas belajar dan refleksi pembelajaran.</label>
+                                        <label class="flex items-start gap-2 cursor-pointer hover:text-forest transition"><input type="checkbox" name="plan_tujuan" value="Menguatkan kemampuan bernalar kritis murid." class="mt-0.5 text-forest focus:ring-forest"> Menguatkan kemampuan bernalar kritis murid.</label>
+                                        <label class="flex items-start gap-2 cursor-pointer hover:text-forest transition"><input type="checkbox" name="plan_tujuan" value="Meningkatkan kemampuan literasi atau numerasi murid." class="mt-0.5 text-forest focus:ring-forest"> Meningkatkan kemampuan literasi atau numerasi murid.</label>
+                                        <label class="flex items-start gap-2 cursor-pointer hover:text-forest transition"><input type="checkbox" name="plan_tujuan" value="Menciptakan lingkungan sekolah yang inklusif, aman, dan bebas perundungan." class="mt-0.5 text-forest focus:ring-forest"> Menciptakan lingkungan sekolah yang inklusif, aman, dan bebas perundungan.</label>
+                                        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="plan_tujuan" value="Lainnya" class="text-forest focus:ring-forest" onchange="document.getElementById('plan_tujuan_lain').classList.toggle('hidden', !this.checked)"> Lainnya</label>
+                                    </div>
+                                    <input type="text" id="plan_tujuan_lain" class="w-full border rounded p-2 text-xs mt-2 hidden" placeholder="Tulis tujuan perbaikan lainnya beserta target ukurnya...">
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="block text-sm font-bold text-forest-dark mb-2">E. Strategi atau Tindakan (Kegiatan Benahi)</label>
+                                    <div id="plan-strategi-container" class="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-4 text-xs bg-white p-3 rounded-lg border border-gray-200 min-h-[50px]">
+                                        <span class="text-gray-400 italic">Pilih indikator terlebih dahulu.</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end gap-2 pt-2 border-t">
+                                    <button type="button" onclick="app.hidePlanForm()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-300">Batal</button>
+                                    <button type="submit" class="px-6 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark shadow-md flex items-center"><i class="fas fa-save mr-2"></i> Simpan Rencana</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-do" class="page-section">
+                    <div class="mb-6 border-b border-sage-light pb-4">
+                        <h2 class="text-2xl font-bold text-forest-dark">02 DO — Pelaksanaan Pembelajaran</h2>
+                        <p class="text-gray-600 text-sm mt-1">Mencatat pelaksanaan aktual berdasarkan rencana (PLAN) yang dipilih.</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter">
+                        <div class="flex flex-wrap justify-between items-center mb-4 border-b pb-3 gap-2">
+                            <div>
+                                <h3 class="font-bold text-forest-dark">Daftar Pelaksanaan Pembelajaran Aktual</h3>
+                                <p class="text-xs text-gray-500">Catat realisasi pelaksanaan di kelas.</p>
+                            </div>
+                            <button onclick="app.showDoForm()" class="px-4 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark shadow role-guru-only"><i class="fas fa-plus mr-1"></i> Catat Pelaksanaan</button>
+                        </div>
+                        <div id="do-list-view" class="space-y-4"></div>
+
+                        <div id="do-form-view" class="hidden bg-gray-50 p-5 rounded-xl border mt-4">
+                            <h4 class="font-bold text-sm mb-3 text-forest-dark">Formulir Pelaksanaan Aktual (DO)</h4>
+                            <div class="p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-xs mb-3">
+                                <strong>Ringkasan Rencana:</strong> Pilih referensi PLAN di bawah ini untuk mengaitkan kegiatan ini dengan rencana spesifik Anda.
+                            </div>
+                            <form id="form-do" onsubmit="app.saveDo(event)">
+                                <input type="hidden" id="do-id">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div>
+                                        <label class="block text-xs font-medium mb-1">Referensi Rencana (PLAN)</label>
+                                        <select id="do-plan-ref" class="w-full border rounded p-2 text-sm bg-white" required></select>
+                                    </div>
+                                    <div><label class="block text-xs font-medium mb-1">Tanggal Pelaksanaan (Aktual)</label><input type="date" id="do-tanggal" required class="w-full border rounded p-2 text-sm"></div>
+                                </div>
+                                <div class="mb-3"><label class="block text-xs font-medium mb-1">Kegiatan yang Dilakukan</label><textarea id="do-kegiatan" rows="2" required class="w-full border rounded p-2 text-sm" placeholder="Deskripsi aktivitas..."></textarea></div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div><label class="block text-xs font-medium mb-1">Keterlaksanaan Rencana</label><input type="text" id="do-keterlaksanaan" required class="w-full border rounded p-2 text-sm" placeholder="Sesuai rencana / Ada modifikasi"></div>
+                                    <div>
+                                        <label class="block text-xs font-medium mb-1">Status Pelaksanaan</label>
+                                        <select id="do-status" class="w-full border rounded p-2 text-sm font-bold text-forest">
+                                            <option value="Draf">Draf</option>
+                                            <option value="Selesai">Selesai</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mb-3"><label class="block text-xs font-medium mb-1">Catatan Pelaksanaan (Respons Siswa)</label><textarea id="do-catatan" rows="2" class="w-full border rounded p-2 text-sm" placeholder="Respon antusias..."></textarea></div>
+                                <div class="mb-4"><label class="block text-xs font-medium mb-1">Bukti Pelaksanaan (Tautan / Deskripsi Bukti)</label><input type="text" id="do-bukti" class="w-full border rounded p-2 text-sm" placeholder="Foto kelas / Lembar tugas"></div>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" onclick="app.hideDoForm()" class="px-4 py-2 border rounded text-xs">Batal</button>
+                                    <button type="submit" class="px-4 py-2 bg-forest text-white rounded text-xs font-bold">Simpan Pelaksanaan</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-check" class="page-section">
+                    <div class="mb-6 border-b border-sage-light pb-4">
+                        <h2 class="text-2xl font-bold text-forest-dark">03 CHECK — Evaluasi & Refleksi</h2>
+                        <p class="text-gray-600 text-sm mt-1">Pengukuran akhir, refleksi mandiri guru, dan perbandingan perubahan nyata siswa.</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter">
+                        <div class="flex justify-between items-center mb-4 border-b pb-3">
+                            <div>
+                                <h3 class="font-bold text-forest-dark">Daftar Evaluasi & Refleksi Mandiri</h3>
+                                <p class="text-xs text-gray-500">Evaluasi perubahan berdasarkan praktik nyata.</p>
+                            </div>
+                            <button onclick="app.showCheckForm()" class="px-4 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark shadow role-guru-only"><i class="fas fa-plus mr-1"></i> Catat Evaluasi</button>
+                        </div>
+                        <div id="check-list-view" class="space-y-4"></div>
+
+                        <div id="check-form-view" class="hidden bg-gray-50 p-5 rounded-xl border mt-4">
+                            <h4 class="font-bold text-sm mb-3 text-forest-dark">Formulir Evaluasi & Refleksi (CHECK)</h4>
+                            <form id="form-check" onsubmit="app.saveCheck(event)">
+                                <input type="hidden" id="chk-id">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div><label class="block text-xs font-medium mb-1">Tanggal Evaluasi</label><input type="date" id="chk-tanggal" required class="w-full border rounded p-2 text-sm"></div>
+                                    <div><label class="block text-xs font-medium mb-1">Hasil Pengukuran (Instrumen Relevan)</label><input type="text" id="chk-pengukuran" required class="w-full border rounded p-2 text-sm" placeholder="Skor akhir / nilai persentase"></div>
+                                </div>
+                                <div class="mb-3"><label class="block text-xs font-medium mb-1">Hasil Evaluasi & Perbandingan Awal-Akhir</label><textarea id="chk-evaluasi" rows="2" required class="w-full border rounded p-2 text-sm" placeholder="Membandingkan data dari PLAN dengan capaian saat ini..."></textarea></div>
+                                <div class="mb-3"><label class="block text-xs font-medium mb-1">Perubahan pada Proses Belajar Siswa</label><textarea id="chk-perubahan" rows="2" required class="w-full border rounded p-2 text-sm" placeholder="Siswa lebih berani berpendapat..."></textarea></div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                                    <div><label class="block text-xs font-medium mb-1">Refleksi Guru</label><textarea id="chk-refleksi" rows="2" required class="w-full border rounded p-2 text-sm" placeholder="Apa yang berhasil dan mengapa..."></textarea></div>
+                                    <div><label class="block text-xs font-medium mb-1">Kendala yang Dihadapi</label><textarea id="chk-kendala" rows="2" class="w-full border rounded p-2 text-sm" placeholder="Tantangan selama implementasi..."></textarea></div>
+                                </div>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" onclick="app.hideCheckForm()" class="px-4 py-2 border rounded text-xs">Batal</button>
+                                    <button type="submit" class="px-4 py-2 bg-forest text-white rounded text-xs font-bold">Simpan Evaluasi</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-act" class="page-section">
+                    <div class="mb-6 border-b border-sage-light pb-4 flex flex-wrap justify-between items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-forest-dark">04 ACT — Tindak Lanjut & Keputusan</h2>
+                            <p class="text-gray-600 text-sm mt-1">Langkah perbaikan selanjutnya dan manajemen siklus.</p>
+                        </div>
+                        <button onclick="app.showNewCycleModal()" class="px-4 py-2.5 bg-gold text-forest-dark rounded-xl text-xs font-bold hover:bg-gold-light shadow transition flex items-center gap-2 role-guru-only">
+                            <i class="fas fa-plus-circle"></i> Buat Siklus Baru
+                        </button>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter mb-6">
+                        <div class="flex justify-between items-center mb-4 border-b pb-3">
+                            <div>
+                                <h3 class="font-bold text-forest-dark">Daftar Tindak Lanjut Guru</h3>
+                                <p class="text-xs text-gray-500">Berdasarkan hasil CHECK.</p>
+                            </div>
+                            <button onclick="app.showActForm()" class="px-4 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark shadow role-guru-only"><i class="fas fa-plus mr-1"></i> Catat Tindak Lanjut</button>
+                        </div>
+                        
+                        <div id="act-feedback-box" class="hidden mb-4 p-4 bg-gold/10 border border-gold/40 rounded-xl">
+                            <h4 class="font-bold text-xs text-gold-dark uppercase mb-2"><i class="fas fa-comment-dots mr-1"></i> Umpan Balik Kepala Sekolah</h4>
+                            <p id="act-feedback-notes" class="text-xs text-gray-800 mb-1"></p>
+                            <p id="act-feedback-rec" class="text-xs text-forest-dark font-medium"></p>
+                        </div>
+
+                        <div id="act-list-view" class="space-y-4"></div>
+
+                        <div id="act-form-view" class="hidden bg-gray-50 p-5 rounded-xl border mt-4">
+                            <h4 class="font-bold text-sm mb-3 text-forest-dark">Formulir Tindak Lanjut (ACT)</h4>
+                            <form id="form-act" onsubmit="app.saveAct(event)">
+                                <input type="hidden" id="act-id">
+                                <div class="mb-3"><label class="block text-xs font-medium mb-1">Keputusan / Langkah Tindak Lanjut</label><textarea id="act-tindaklanjut" rows="2" required class="w-full border rounded p-2 text-sm" placeholder="Rencana perbaikan ke depan..."></textarea></div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                                    <div><label class="block text-xs font-medium mb-1">Penanggung Jawab (PIC)</label><input type="text" id="act-pic" required class="w-full border rounded p-2 text-sm"></div>
+                                    <div><label class="block text-xs font-medium mb-1">Target Tanggal</label><input type="date" id="act-target" required class="w-full border rounded p-2 text-sm"></div>
+                                    <div>
+                                        <label class="block text-xs font-medium mb-1">Status Tindak Lanjut</label>
+                                        <select id="act-status" class="w-full border rounded p-2 text-sm font-bold text-forest">
+                                            <option value="Direncanakan">Direncanakan</option>
+                                            <option value="Sedang Dilakukan">Sedang Dilakukan</option>
+                                            <option value="Selesai">Selesai</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" onclick="app.hideActForm()" class="px-4 py-2 border rounded text-xs">Batal</button>
+                                    <button type="submit" class="px-4 py-2 bg-forest text-white rounded text-xs font-bold">Simpan Tindak Lanjut</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter mb-6 space-y-4 role-guru-only">
+                        <div class="flex justify-between items-center border-b pb-3">
+                            <h3 class="font-bold text-forest-dark text-base" id="act-active-cycle-header">Keputusan Final Siklus Aktif</h3>
+                            <span class="text-xs font-bold px-3 py-1 rounded-full bg-green-100 text-green-800" id="act-cycle-status-badge">Sedang Berjalan</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                            <div class="bg-gray-50 p-4 rounded-xl border space-y-1">
+                                <span class="text-forest font-bold uppercase text-[10px]">Ringkasan Masalah & Tujuan</span>
+                                <p id="act-summary-problem" class="font-semibold text-gray-800">-</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-xl border space-y-1">
+                                <span class="text-forest font-bold uppercase text-[10px]">Kesimpulan Evaluasi (CHECK)</span>
+                                <p id="act-summary-check" class="font-semibold text-gray-800">Belum ada evaluasi CHECK.</p>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-t space-y-3">
+                            <label class="block text-xs font-bold text-gray-700">Pilih Keputusan Akhir Siklus Ini:</label>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <button onclick="app.completeCycleAction('Selesai (Pertahankan Praktik Baik)')" class="p-3 bg-green-50 hover:bg-green-100 border border-green-200 text-green-800 rounded-xl text-xs font-bold text-left transition flex flex-col gap-1">
+                                    <span><i class="fas fa-check-circle text-green-600 mr-1"></i> Pertahankan Praktik Baik</span>
+                                    <span class="text-[10px] font-normal text-gray-600">Target tercapai, selesaikan siklus ini.</span>
+                                </button>
+                                <button onclick="app.completeCycleAction('Lanjut Perbaikan (Target Belum Tercapai)')" class="p-3 bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-800 rounded-xl text-xs font-bold text-left transition flex flex-col gap-1">
+                                    <span><i class="fas fa-redo text-orange-600 mr-1"></i> Lanjutkan Perbaikan</span>
+                                    <span class="text-[10px] font-normal text-gray-600">Teruskan perbaikan pada siklus yang sama.</span>
+                                </button>
+                                <button onclick="app.showNewCycleModal()" class="p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 rounded-xl text-xs font-bold text-left transition flex flex-col gap-1">
+                                    <span><i class="fas fa-arrow-right text-blue-600 mr-1"></i> Buka Siklus Baru</span>
+                                    <span class="text-[10px] font-normal text-gray-600">Teralih ke akar masalah baru.</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter">
+                        <div class="flex justify-between items-center mb-4 border-b pb-3">
+                            <div>
+                                <h3 class="font-bold text-forest-dark">Riwayat Seluruh Siklus Perbaikan</h3>
+                                <p class="text-xs text-gray-500">Arsip terpisah untuk menelusuri perkembangan kualitas pembelajaran.</p>
+                            </div>
+                        </div>
+                        <div id="cycles-history-list" class="space-y-4"></div>
+                    </div>
+                </section>
+
+                <div id="new-cycle-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4 hidden">
+                    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border space-y-4">
+                        <div class="flex items-center justify-between border-b pb-3">
+                            <h3 class="font-bold text-base text-forest-dark flex items-center gap-2"><i class="fas fa-sync text-gold"></i> Buka Siklus Perbaikan Baru</h3>
+                            <button onclick="app.hideNewCycleModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
+                        </div>
+                        <p class="text-xs text-gray-600 leading-relaxed">
+                            Siklus baru diinisialisasi mandiri. Data siklus sebelumnya diarsipkan dengan aman tanpa tertimpa.
+                        </p>
+                        <form id="form-new-cycle" onsubmit="app.createNewCycle(event)" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Judul / Fokus Siklus</label>
+                                <input type="text" id="nc-title" required class="w-full border rounded-lg p-2.5 text-xs outline-none" placeholder="Cth: Peningkatan Kemampuan Numerasi Fase C">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Akar Masalah Utama</label>
+                                <input type="text" id="nc-problem" required class="w-full border rounded-lg p-2.5 text-xs outline-none" placeholder="Cth: Pemahaman konsep pecahan siswa rendah">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Referensi / Rujukan Data</label>
+                                <select id="nc-datasource" class="w-full border rounded-lg p-2.5 text-xs outline-none bg-white">
+                                    <option value="Rapor Pendidikan D.1">Rapor Pendidikan D.1</option>
+                                    <option value="Asesmen Praktik Pembelajaran">Asesmen Praktik Pembelajaran</option>
+                                    <option value="Observasi Kelas">Observasi Kelas</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Penanggung Jawab (PIC)</label>
+                                <input type="text" id="nc-pic" required class="w-full border rounded-lg p-2.5 text-xs outline-none" placeholder="Nama Guru / Tim">
+                            </div>
+                            <div class="border-t pt-3 flex justify-end gap-2">
+                                <button type="button" onclick="app.hideNewCycleModal()" class="px-4 py-2 bg-gray-200 text-gray-700 text-xs font-bold rounded-lg">Batal</button>
+                                <button type="submit" class="px-4 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark">Inisialisasi Siklus</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <section id="page-data-guru" class="page-section">
+                    <div class="mb-6 border-b border-sage-light pb-4">
+                        <h2 class="text-2xl font-bold text-forest-dark">Data Guru</h2>
+                        <p class="text-gray-600 text-sm mt-1">Kelola profil pendidik SD Negeri Gupit.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter mb-6">
+                        <div class="flex justify-between items-center mb-4 border-b pb-3">
+                            <div>
+                                <h3 class="font-bold text-forest-dark">Daftar Pendidik</h3>
+                                <p class="text-xs text-gray-500">Manajemen data pegawai.</p>
+                            </div>
+                            <button onclick="app.showTeacherForm()" class="px-4 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark shadow role-kepsek-only"><i class="fas fa-user-plus mr-1"></i> Tambah Guru</button>
+                        </div>
+                        <div class="overflow-x-auto mb-4">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-gray-50 text-gray-600 text-xs border-b">
+                                        <th class="p-3">Nama & Gelar</th>
+                                        <th class="p-3">NIP / NUPTK</th>
+                                        <th class="p-3">Jabatan</th>
+                                        <th class="p-3">Email</th>
+                                        <th class="p-3 text-center">Status</th>
+                                        <th class="p-3 text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teacher-table-body" class="divide-y divide-gray-100"></tbody>
+                            </table>
+                        </div>
+
+                        <div id="teacher-form-view" class="hidden bg-gray-50 p-4 rounded-xl border mt-4">
+                            <h4 class="font-bold text-sm mb-3 text-forest-dark">Formulir Data Guru</h4>
+                            <form id="form-teacher" onsubmit="app.saveTeacher(event)">
+                                <input type="hidden" id="tch-id">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                                    <div><label class="block text-xs font-medium mb-1">Nama Lengkap & Gelar</label><input type="text" id="tch-nama" required class="w-full border rounded p-2 text-sm"></div>
+                                    <div><label class="block text-xs font-medium mb-1">NIP</label><input type="text" id="tch-nip" class="w-full border rounded p-2 text-sm"></div>
+                                    <div><label class="block text-xs font-medium mb-1">NUPTK</label><input type="text" id="tch-nuptk" class="w-full border rounded p-2 text-sm"></div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                                    <div><label class="block text-xs font-medium mb-1">Jabatan</label><input type="text" id="tch-jabatan" value="Guru Kelas" class="w-full border rounded p-2 text-sm"></div>
+                                    <div><label class="block text-xs font-medium mb-1">Email</label><input type="email" id="tch-email" required class="w-full border rounded p-2 text-sm"></div>
+                                    <div>
+                                        <label class="block text-xs font-medium mb-1">Status Keaktifan</label>
+                                        <select id="tch-status" class="w-full border rounded p-2 text-sm font-bold text-forest">
+                                            <option value="Aktif">Aktif</option>
+                                            <option value="Nonaktif">Nonaktif</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" onclick="app.hideTeacherForm()" class="px-4 py-2 border rounded text-xs">Batal</button>
+                                    <button type="submit" class="px-4 py-2 bg-forest text-white rounded text-xs font-bold">Simpan Guru</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-profil-sekolah" class="page-section">
+                    <div class="mb-6 border-b border-sage-light pb-4">
+                        <h2 class="text-2xl font-bold text-forest-dark">Profil Sekolah</h2>
+                        <p class="text-gray-600 text-sm mt-1">Data master satuan pendidikan (SDN Gupit).</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter mb-6">
+                        <div class="flex justify-between items-center mb-4 border-b pb-3">
+                            <div>
+                                <h3 class="font-bold text-forest-dark">Identitas Sekolah & Kepala Sekolah</h3>
+                                <p class="text-xs text-gray-500">Terintegrasi dengan RPP dan laporan resmi.</p>
+                            </div>
+                            <button onclick="app.saveSchoolProfile()" class="px-4 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark shadow role-kepsek-only"><i class="fas fa-save mr-1"></i> Simpan Profil</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div><label class="block text-xs font-medium text-gray-700 mb-1">Nama Sekolah</label><input type="text" id="sch-nama" class="w-full border rounded-lg p-2.5 text-sm" value="SDN Gupit"></div>
+                            <div><label class="block text-xs font-medium text-gray-700 mb-1">NPSN</label><input type="text" id="sch-npsn" class="w-full border rounded-lg p-2.5 text-sm" value="20305678"></div>
+                            <div><label class="block text-xs font-medium text-gray-700 mb-1">Alamat Sekolah</label><input type="text" id="sch-alamat" class="w-full border rounded-lg p-2.5 text-sm" value="Gedangsari"></div>
+                            <div><label class="block text-xs font-medium text-gray-700 mb-1">Nama Kepala Sekolah</label><input type="text" id="sch-kepsek" class="w-full border rounded-lg p-2.5 text-sm" value="Erma Fitri Astuti, M.Pd."></div>
+                            <div><label class="block text-xs font-medium text-gray-700 mb-1">NIP Kepala Sekolah</label><input type="text" id="sch-nipkepsek" class="w-full border rounded-lg p-2.5 text-sm" placeholder="Kosongkan jika belum ada"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-generator-rpp" class="page-section">
+                    <div class="mb-6 border-b border-sage-light pb-4">
+                        <h2 class="text-2xl font-bold text-forest-dark">Generator RPP Pembelajaran Mendalam</h2>
+                        <p class="text-gray-600 text-sm mt-1">Mesin perancang otomatis berbasis Capaian Pembelajaran (CP) dengan Konteks Lingkungan GELIS.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter">
+                        <div class="flex justify-between items-center mb-4 border-b pb-3">
+                            <div>
+                                <h3 class="font-bold text-forest-dark text-lg"><i class="fas fa-file-alt text-gold mr-2"></i> Buat & Sunting RPP</h3>
+                                <p class="text-xs text-gray-500">Terintegrasi otomatis dengan Profil Sekolah.</p>
+                            </div>
+                            <button onclick="app.toggleRppForm()" class="px-3 py-1.5 bg-cream-dark text-forest font-semibold text-xs rounded-lg hover:bg-gold hover:text-white transition"><i class="fas fa-chevron-down mr-1" id="rpp-form-toggle-icon"></i> Buka/Tutup Form</button>
+                        </div>
+
+                        <div id="rpp-form-container" class="space-y-6">
+                            <form id="form-rpp" onsubmit="app.generateRpp(event)" class="space-y-6">
+                                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm hover:border-forest/30 transition duration-300">
+                                    <h4 class="font-bold text-sm text-forest-dark mb-3 uppercase flex items-center"><i class="fas fa-id-card mr-2 text-forest-light"></i> 1. Identitas RPP</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                                        <div><label class="block text-xs font-medium mb-1 text-gray-700">Satuan Pendidikan</label><input type="text" id="rpp-sekolah" required class="w-full border-gray-300 rounded-lg p-2 text-sm bg-white shadow-sm focus:border-forest focus:ring focus:ring-forest/20"></div>
+                                        <div><label class="block text-xs font-medium mb-1 text-gray-700">Nama Penyusun</label><input type="text" id="rpp-penyusun" placeholder="Cth: Siti Rahma, S.Pd" required class="w-full border-gray-300 rounded-lg p-2 text-sm bg-white shadow-sm focus:border-forest focus:ring focus:ring-forest/20"></div>
+                                        <div><label class="block text-xs font-medium mb-1 text-gray-700">NIP Penyusun (Opsional)</label><input type="text" id="rpp-nip" placeholder="NIP" class="w-full border-gray-300 rounded-lg p-2 text-sm bg-white shadow-sm focus:border-forest focus:ring focus:ring-forest/20"></div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                                        <div>
+                                            <label class="block text-xs font-medium mb-1 text-gray-700">Mata Pelajaran</label>
+                                            <select id="rpp-mapel" class="w-full border-gray-300 rounded-lg p-2 text-sm bg-white shadow-sm focus:border-forest focus:ring focus:ring-forest/20" onchange="this.value === 'Lainnya' ? document.getElementById('rpp-mapel-lainnya').classList.remove('hidden') : document.getElementById('rpp-mapel-lainnya').classList.add('hidden')">
+                                                <option value="Pendidikan Agama">Pendidikan Agama</option>
+                                                <option value="Pendidikan Pancasila">Pendidikan Pancasila</option>
+                                                <option value="Bahasa Indonesia">Bahasa Indonesia</option>
+                                                <option value="Matematika">Matematika</option>
+                                                <option value="IPAS" selected>IPAS</option>
+                                                <option value="PJOK">PJOK</option>
+                                                <option value="Seni Budaya">Seni Budaya</option>
+                                                <option value="Bahasa Inggris">Bahasa Inggris</option>
+                                                <option value="Bahasa Jawa">Bahasa Jawa</option>
+                                                <option value="Batik">Batik</option>
+                                                <option value="Lainnya">Lainnya...</option>
+                                            </select>
+                                            <input type="text" id="rpp-mapel-lainnya" placeholder="Tulis mapel spesifik..." class="w-full border-gray-300 rounded-lg p-2 text-sm mt-2 hidden bg-white shadow-sm focus:border-forest focus:ring focus:ring-forest/20">
+                                        </div>
+                                        <div><label class="block text-xs font-medium mb-1 text-gray-700">Fase / Kelas</label><input type="text" id="rpp-kelas" value="Fase C / Kelas 5" required class="w-full border-gray-300 rounded-lg p-2 text-sm bg-white shadow-sm focus:border-forest focus:ring focus:ring-forest/20"></div>
+                                        <div>
+                                            <label class="block text-xs font-medium mb-1 text-gray-700">Semester</label>
+                                            <select id="rpp-semester" class="w-full border-gray-300 rounded-lg p-2 text-sm bg-white shadow-sm focus:border-forest focus:ring focus:ring-forest/20">
+                                                <option value="1 (Ganjil)">1 (Ganjil)</option>
+                                                <option value="2 (Genap)">2 (Genap)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                        <div><label class="block text-xs font-medium mb-1 text-gray-700">Materi / Topik Utama</label><input type="text" id="rpp-materi" required class="w-full border-gray-300 rounded-lg p-2 text-sm bg-white shadow-sm focus:border-forest focus:ring focus:ring-forest/20" placeholder="Cth: Perubahan Wujud Zat"></div>
+                                        <div><label class="block text-xs font-medium mb-1 text-gray-700">Tanggal Penyusunan</label><input type="date" id="rpp-tgl" required class="w-full border-gray-300 rounded-lg p-2 text-sm bg-white shadow-sm focus:border-forest focus:ring focus:ring-forest/20"></div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div><label class="block text-xs font-medium mb-1 text-gray-700">Jumlah Pertemuan (Menentukan blok aktivitas)</label><input type="number" id="rpp-pertemuan" min="1" max="10" value="1" required class="w-full border-gray-300 rounded-lg p-2 text-sm bg-white shadow-sm focus:border-forest focus:ring focus:ring-forest/20"></div>
+                                        <div class="flex gap-2">
+                                            <div class="w-1/2"><label class="block text-xs font-medium mb-1 text-gray-700">Total JP per Pertemuan</label><input type="number" id="rpp-jp" value="2" class="w-full border-gray-300 rounded-lg p-2 text-sm bg-white shadow-sm focus:border-forest focus:ring focus:ring-forest/20"></div>
+                                            <div class="w-1/2"><label class="block text-xs font-medium mb-1 text-gray-700">Menit per JP</label><input type="number" id="rpp-menit" value="35" class="w-full border-gray-300 rounded-lg p-2 text-sm bg-white shadow-sm focus:border-forest focus:ring focus:ring-forest/20"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm hover:border-forest/30 transition duration-300">
+                                    <h4 class="font-bold text-sm text-forest-dark mb-3 uppercase flex items-center"><i class="fas fa-brain mr-2 text-forest-light"></i> 2. Analisis Capaian & Tujuan Pembelajaran</h4>
+                                    
+                                    <div class="mb-3">
+                                        <label class="block text-xs font-medium mb-1 text-gray-700">Capaian Pembelajaran (CP) <span class="text-red-500">*</span></label>
+                                        <textarea id="rpp-cp" rows="3" required class="w-full border-gray-300 rounded-lg p-2 text-sm bg-white shadow-sm focus:border-forest focus:ring focus:ring-forest/20" placeholder="Ketik/Paste teks CP lengkap di sini..."></textarea>
+                                    </div>
+                                    
+                                    <div>
+                                        <button type="button" onclick="app.analyzeCP()" class="w-full md:w-auto px-4 py-2 bg-gold-dark hover:bg-gold text-white font-bold text-xs rounded-lg shadow transition mb-2">
+                                            <i class="fas fa-lightbulb mr-1"></i> Analisis CP & Hasilkan Alternatif TP
+                                        </button>
+                                        <p class="text-[10px] text-gray-500 mb-2 italic">Mesin akan mengurai CP menjadi beberapa alternatif Tujuan Pembelajaran (C1-C6) berpola ABCD yang spesifik dengan rekomendasi aktivitas Memahami, Mengaplikasi, atau Merefleksi.</p>
+                                        <div id="rpp-tp-container" class="hidden bg-white p-3 rounded-lg border border-gray-200"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm hover:border-forest/30 transition duration-300">
+                                    <h4 class="font-bold text-sm text-forest-dark mb-3 uppercase flex items-center"><i class="fas fa-drafting-compass mr-2 text-forest-light"></i> 3. Parameter Desain Pembelajaran</h4>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                        <div>
+                                            <label class="block text-xs font-medium mb-1 text-gray-700">Model Pembelajaran (Otomatisasi Sintaks)</label>
+                                            <select id="rpp-model" class="w-full border-gray-300 rounded-lg p-2 text-sm bg-white shadow-sm focus:border-forest focus:ring focus:ring-forest/20" onchange="this.value === 'Lainnya' ? document.getElementById('rpp-model-lainnya-container').classList.remove('hidden') : document.getElementById('rpp-model-lainnya-container').classList.add('hidden')">
+                                                <option value="Tanpa model pembelajaran khusus">-- Tanpa Model Khusus --</option>
+                                                <option value="Problem Based Learning" selected>Problem Based Learning (PBL)</option>
+                                                <option value="Project Based Learning">Project Based Learning (PjBL)</option>
+                                                <option value="Discovery Learning">Discovery Learning</option>
+                                                <option value="Inquiry Learning">Inquiry Learning</option>
+                                                <option value="Cooperative Learning">Cooperative Learning</option>
+                                                <option value="Direct Instruction">Direct Instruction</option>
+                                                <option value="Lainnya">Model Lainnya...</option>
+                                            </select>
+                                            <div id="rpp-model-lainnya-container" class="mt-2 hidden space-y-2">
+                                                <input type="text" id="rpp-model-lainnya" placeholder="Nama Model Spesifik..." class="w-full border-gray-300 rounded-lg p-2 text-sm bg-white shadow-sm focus:border-forest">
+                                                <textarea id="rpp-model-sintaks-lainnya" rows="2" placeholder="Tuliskan urutan sintaks secara ringkas dipisah baris baru..." class="w-full border-gray-300 rounded-lg p-2 text-sm bg-white shadow-sm focus:border-forest text-xs"></textarea>
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-xs font-medium mb-1 text-gray-700">Metode Pembelajaran (Pilih lebih dari satu)</label>
+                                            <div class="bg-white border border-gray-300 rounded-lg p-2 shadow-sm h-32 overflow-y-auto text-xs grid grid-cols-2 gap-2">
+                                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" name="rpp-metode-cb" value="Diskusi" checked class="rounded text-forest focus:ring-forest"> Diskusi</label>
+                                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" name="rpp-metode-cb" value="Tanya jawab" checked class="rounded text-forest focus:ring-forest"> Tanya Jawab</label>
+                                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" name="rpp-metode-cb" value="Demonstrasi" class="rounded text-forest focus:ring-forest"> Demonstrasi</label>
+                                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" name="rpp-metode-cb" value="Eksperimen" class="rounded text-forest focus:ring-forest"> Eksperimen</label>
+                                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" name="rpp-metode-cb" value="Penugasan" class="rounded text-forest focus:ring-forest"> Penugasan</label>
+                                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" name="rpp-metode-cb" value="Presentasi" checked class="rounded text-forest focus:ring-forest"> Presentasi</label>
+                                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" name="rpp-metode-cb" value="Observasi Lingkungan" class="rounded text-forest focus:ring-forest"> Obs. Lingkungan</label>
+                                            </div>
+                                            <input type="text" id="rpp-metode-lainnya" placeholder="Tambah metode lain..." class="w-full border-gray-300 rounded-lg p-2 text-sm mt-2 bg-white shadow-sm focus:border-forest focus:ring focus:ring-forest/20">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-xs font-medium mb-2 text-gray-700">Pengalaman Belajar (Kegiatan Inti):</label>
+                                        <p class="text-[10px] text-gray-500 mb-2 italic">Centang pengalaman belajar yang ingin ditampilkan dalam kegiatan inti RPP.</p>
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-y-2 gap-x-4 text-xs bg-white p-3 rounded-lg border border-gray-200">
+                                            <label class="flex items-center gap-2 cursor-pointer hover:text-forest transition"><input type="checkbox" name="rpp-pengalaman" value="Memahami" checked class="rounded text-forest focus:ring-forest"> Memahami</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:text-forest transition"><input type="checkbox" name="rpp-pengalaman" value="Mengaplikasi" checked class="rounded text-forest focus:ring-forest"> Mengaplikasi</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:text-forest transition"><input type="checkbox" name="rpp-pengalaman" value="Merefleksi" checked class="rounded text-forest focus:ring-forest"> Merefleksi</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end gap-3 pt-2">
+                                    <button type="submit" class="px-6 py-3 bg-forest text-white font-bold text-sm rounded-xl hover:bg-forest-dark shadow-md transition-all flex items-center group">
+                                        <i class="fas fa-cogs mr-2 group-hover:rotate-180 transition duration-500"></i> Buat RPP Terotomatisasi
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div id="rpp-preview-wrapper" class="hidden mt-8 border-t pt-6">
+                            <div class="flex flex-wrap justify-between items-center mb-4 print:hidden bg-forest/5 p-4 rounded-xl border border-forest/20 shadow-sm gap-4">
+                                <span class="text-sm font-bold text-forest flex items-center"><i class="fas fa-edit text-green-600 mr-2 text-xl"></i> Mode Edit & Ekspor Aktif. Klik langsung pada teks dokumen di bawah untuk mengubah isi sebelum diekspor.</span>
+                                <div class="flex gap-2 flex-wrap">
+                                    <button type="button" onclick="app.toggleRppForm()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-xs font-bold rounded-lg shadow-sm hover:bg-gray-50 transition"><i class="fas fa-chevron-up mr-1"></i> Edit Parameter</button>
+                                    <button type="button" onclick="app.exportWord()" class="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg shadow-sm hover:bg-blue-700 transition"><i class="fas fa-file-word mr-1"></i> Unduh Word (.docx)</button>
+                                    <button type="button" onclick="app.exportPDF()" class="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg shadow-sm hover:bg-red-700 transition"><i class="fas fa-file-pdf mr-1"></i> Unduh PDF</button>
+                                    <button type="button" onclick="window.print()" class="px-4 py-2 bg-forest text-white text-xs font-bold rounded-lg shadow-sm hover:bg-forest-dark transition"><i class="fas fa-print mr-1"></i> Cetak</button>
+                                </div>
+                            </div>
+                            <div id="rpp-document-output" contenteditable="true" class="bg-white p-8 sm:p-12 rounded-lg shadow-2xl border border-gray-200 max-w-[21cm] mx-auto space-y-6 text-[11pt] text-black leading-normal font-sans outline-none focus:ring-2 focus:ring-forest transition-all" style="font-family: 'Times New Roman', Times, serif; color: black;"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==================== MENU APLIKASI INTERAKTIF ==================== -->
+                <section id="page-aplikasi-interaktif" class="page-section">
+                    <div class="mb-6 border-b border-sage-light pb-4">
+                        <h2 class="text-3xl font-bold text-forest-dark">Aplikasi Interaktif</h2>
+                        <p class="text-gray-600 text-sm mt-1">Tempat membuat dan menggunakan media pembelajaran interaktif yang sesuai dengan kebutuhan peserta didik.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" id="interactive-apps-grid"></div>
+                </section>
+
+                <section id="page-komunitas-belajar" class="page-section">
+                    <div class="mb-6 border-b border-sage-light pb-4">
+                        <h2 class="text-2xl font-bold text-forest-dark">Komunitas Belajar (Kombel)</h2>
+                        <p class="text-gray-600 text-sm mt-1">Ruang kolaborasi guru untuk berdiskusi berdasarkan data.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter">
+                        <div class="flex justify-between items-center mb-4 border-b pb-3">
+                            <div>
+                                <h3 class="font-bold text-forest-dark">Agenda & Kegiatan Kombel</h3>
+                                <p class="text-xs text-gray-500">Catat topik, hasil diskusi, dan kesepakatan.</p>
+                            </div>
+                            <button onclick="app.showKombelForm()" class="px-4 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark shadow"><i class="fas fa-plus mr-1"></i> Kegiatan Baru</button>
+                        </div>
+                        <div id="kombel-list-view" class="space-y-4"></div>
+
+                        <div id="kombel-form-view" class="hidden bg-gray-50 p-5 rounded-xl border mt-4">
+                            <h4 class="font-bold text-sm mb-3 text-forest-dark">Formulir Komunitas Belajar</h4>
+                            <form id="form-kombel" onsubmit="app.saveKombel(event)">
+                                <input type="hidden" id="kb-id">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div><label class="block text-xs font-medium mb-1">Tanggal Kegiatan (Manual)</label><input type="date" id="kb-tanggal" required class="w-full border rounded p-2 text-sm"></div>
+                                    <div><label class="block text-xs font-medium mb-1">Topik Diskusi</label><input type="text" id="kb-topik" required class="w-full border rounded p-2 text-sm" placeholder="Topik..."></div>
+                                </div>
+                                <div class="mb-3"><label class="block text-xs font-medium mb-1">Hasil Diskusi & Kesepakatan</label><textarea id="kb-hasil" rows="2" required class="w-full border rounded p-2 text-sm" placeholder="Kesepakatan..."></textarea></div>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" onclick="app.hideKombelForm()" class="px-4 py-2 border rounded text-xs">Batal</button>
+                                    <button type="submit" class="px-4 py-2 bg-forest text-white rounded text-xs font-bold">Simpan Kombel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-lesson-study" class="page-section">
+                    <div class="mb-6 border-b border-sage-light pb-4">
+                        <h2 class="text-2xl font-bold text-forest-dark">Lesson Study</h2>
+                        <p class="text-gray-600 text-sm mt-1">Siklus Plan, Do, See.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter">
+                        <div class="flex justify-between items-center mb-4 border-b pb-3">
+                            <div>
+                                <h3 class="font-bold text-forest-dark">Siklus Lesson Study</h3>
+                                <p class="text-xs text-gray-500">Pencatatan kolaboratif Plan, Do, See.</p>
+                            </div>
+                            <button onclick="app.showLsForm()" class="px-4 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark shadow"><i class="fas fa-plus mr-1"></i> Siklus Baru</button>
+                        </div>
+                        <div id="ls-list-view" class="space-y-4"></div>
+
+                        <div id="ls-form-view" class="hidden bg-gray-50 p-5 rounded-xl border mt-4">
+                            <h4 class="font-bold text-sm mb-3 text-forest-dark">Formulir Lesson Study</h4>
+                            <form id="form-ls" onsubmit="app.saveLs(event)">
+                                <input type="hidden" id="ls-id">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                                    <div><label class="block text-xs font-medium mb-1">Tanggal (Manual)</label><input type="date" id="ls-tanggal" required class="w-full border rounded p-2 text-sm"></div>
+                                    <div><label class="block text-xs font-medium mb-1">Kelas / Mapel</label><input type="text" id="ls-kelas" required class="w-full border rounded p-2 text-sm" placeholder="Kelas 5 / IPAS"></div>
+                                    <div><label class="block text-xs font-medium mb-1">Guru Model</label><input type="text" id="ls-guru" required class="w-full border rounded p-2 text-sm" placeholder="Nama Guru"></div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div><label class="block text-xs font-medium mb-1">Plan: Tujuan & Fokus</label><textarea id="ls-plan" rows="2" required class="w-full border rounded p-2 text-sm" placeholder="Fokus..."></textarea></div>
+                                    <div><label class="block text-xs font-medium mb-1">Do: Catatan Observasi</label><textarea id="ls-do" rows="2" required class="w-full border rounded p-2 text-sm" placeholder="Temuan..."></textarea></div>
+                                </div>
+                                <div class="mb-4"><label class="block text-xs font-medium mb-1">See (Check): Refleksi Bersama</label><textarea id="ls-see" rows="2" required class="w-full border rounded p-2 text-sm" placeholder="Refleksi..."></textarea></div>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" onclick="app.hideLsForm()" class="px-4 py-2 border rounded text-xs">Batal</button>
+                                    <button type="submit" class="px-4 py-2 bg-forest text-white rounded text-xs font-bold">Simpan Lesson Study</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-asisten-ai" class="page-section">
+                    <div class="mb-6 border-b border-sage-light pb-4">
+                        <h2 class="text-2xl font-bold text-forest-dark">Asisten AI GELIS</h2>
+                        <p class="text-gray-600 text-sm mt-1">Generator prompt offline berbasis data lokal & Google Gemini API.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                            <button onclick="app.generatePrompt('analisis')" class="p-4 bg-cream hover:bg-gold-light/20 border rounded-xl text-left text-xs font-bold text-forest-dark transition-colors"><i class="fas fa-chart-line text-forest mb-2 block text-base"></i> 1. Analisis Data</button>
+                            <button onclick="app.generatePrompt('perencanaan')" class="p-4 bg-cream hover:bg-gold-light/20 border rounded-xl text-left text-xs font-bold text-forest-dark transition-colors"><i class="fas fa-lightbulb text-gold mb-2 block text-base"></i> 2. Perencanaan</button>
+                            <button onclick="app.generatePrompt('tindaklanjut')" class="p-4 bg-cream hover:bg-gold-light/20 border rounded-xl text-left text-xs font-bold text-forest-dark transition-colors"><i class="fas fa-bolt text-forest mb-2 block text-base"></i> 3. Tindak Lanjut</button>
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Templat Prompt / Interaksi Gemini API:</label>
+                            <textarea id="ai-output" rows="4" class="w-full border rounded-xl p-3 text-xs font-mono bg-gray-50 outline-none" placeholder="Pilih fungsi di atas atau masukkan pertanyaan..."></textarea>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <button onclick="app.callGeminiAPI()" class="px-5 py-2.5 bg-gold-dark hover:bg-gold text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-2">
+                                <i class="fas fa-robot"></i> Kirim ke Google Gemini AI
+                            </button>
+                            <button onclick="app.copyPrompt()" class="px-4 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark"><i class="fas fa-copy mr-1"></i> Salin Prompt</button>
+                        </div>
+                        <div id="ai-response-box" class="hidden p-4 bg-blue-50 border border-blue-200 rounded-xl text-xs text-gray-800 space-y-1">
+                            <h4 class="font-bold text-blue-900"><i class="fas fa-sparkles mr-1 text-gold"></i> Tanggapan Gemini AI:</h4>
+                            <div id="ai-response-content" class="leading-relaxed"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-monitoring-dan-dampak" class="page-section">
+                    <div class="mb-6 border-b border-sage-light pb-4 flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold text-forest-dark">Monitoring, Observasi, & Dampak</h2>
+                            <p class="text-gray-600 text-sm mt-1">Supervisi akademik dan umpan balik (coaching) oleh Kepala Sekolah.</p>
+                        </div>
+                        <button onclick="app.showMonitoringForm()" class="px-4 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark shadow role-kepsek-only"><i class="fas fa-plus mr-1"></i> Catat Observasi Baru</button>
+                    </div>
+
+                    <div id="monitoring-form-view" class="hidden bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter mb-6">
+                        <h3 class="font-bold text-base text-forest-dark mb-4 border-b pb-2">Formulir Observasi & Umpan Balik (Kepala Sekolah)</h3>
+                        <form id="form-monitoring" onsubmit="app.saveMonitoring(event)">
+                            <input type="hidden" id="mon-id">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                                <div><label class="block text-xs font-medium mb-1">Pilih Guru yang Disupervisi</label><select id="mon-teacher" onchange="app.onMonTeacherChange()" class="w-full border rounded p-2 text-sm bg-white"></select></div>
+                                <div><label class="block text-xs font-medium mb-1">Siklus PDCA Terkait</label><select id="mon-cycle" onchange="app.onMonCycleChange()" class="w-full border rounded p-2 text-sm bg-white"><option value="">-- Pilih Guru Dulu --</option></select></div>
+                                <div><label class="block text-xs font-medium mb-1">Tanggal Observasi Aktual</label><input type="date" id="mon-date" required class="w-full border rounded p-2 text-sm"></div>
+                            </div>
+                            
+                            <div id="mon-ref-box" class="hidden mb-4 p-4 bg-sage-lighter/30 border border-sage-light rounded-xl text-xs space-y-2">
+                                <div class="font-bold text-forest border-b border-sage-light pb-1"><i class="fas fa-info-circle mr-1"></i> Referensi Data Guru (Bahan Dialog Profesional)</div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                                    <div><span class="font-semibold text-gray-600 block">Akar Masalah (PLAN):</span><span id="mon-ref-plan" class="text-gray-800"></span></div>
+                                    <div><span class="font-semibold text-gray-600 block">Refleksi Mandiri Guru (CHECK):</span><span id="mon-ref-check" class="text-gray-800"></span></div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="block text-xs font-medium mb-1">Instrumen Observasi Pembelajaran</label>
+                                <input type="text" id="mon-focus" required class="w-full border rounded p-2 text-sm" placeholder="Cth: Lembar Observasi Keterlibatan Siswa / Manajemen Kelas">
+                            </div>
+                            <div class="mb-3"><label class="block text-xs font-medium mb-1">Catatan Bukti Observasi (Fokus pada Proses Belajar Siswa)</label><textarea id="mon-notes" rows="2" required class="w-full border rounded p-2 text-sm" placeholder="Catat aktivitas, respons, atau ucapan nyata dari peserta didik selama belajar, bukan opini subyektif..."></textarea></div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                <div><label class="block text-xs font-medium mb-1">Kekuatan Praktik Pembelajaran</label><textarea id="mon-strengths" rows="2" required class="w-full border rounded p-2 text-sm" placeholder="Aspek yang sudah sangat baik berdasarkan bukti observasi..."></textarea></div>
+                                <div><label class="block text-xs font-medium mb-1">Area yang Perlu Dikembangkan</label><textarea id="mon-improvements" rows="2" required class="w-full border rounded p-2 text-sm" placeholder="Saran pengembangan yang berpusat pada siswa..."></textarea></div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                                <div><label class="block text-xs font-medium mb-1">Rekomendasi Tindak Lanjut untuk Guru</label><input type="text" id="mon-recommendation" required class="w-full border rounded p-2 text-sm" placeholder="Saran konkret, misal: 'Gunakan kartu peran pada siklus berikutnya'..."></div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">Status Tindak Lanjut Guru</label>
+                                    <select id="mon-status" class="w-full border rounded p-2 text-sm font-bold text-forest">
+                                        <option value="Belum Dilakukan">Belum Dilakukan</option>
+                                        <option value="Sedang Dilakukan">Sedang Dilakukan</option>
+                                        <option value="Selesai">Selesai</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-2">
+                                <button type="button" onclick="app.hideMonitoringForm()" class="px-4 py-2 border rounded text-xs">Batal</button>
+                                <button type="submit" class="px-4 py-2 bg-forest text-white rounded text-xs font-bold">Simpan Hasil Observasi</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter mb-6">
+                        <div class="flex justify-between items-center mb-4 border-b pb-3">
+                            <div>
+                                <h3 class="font-bold text-forest-dark">Riwayat Catatan Observasi & Umpan Balik Kepala Sekolah</h3>
+                                <p class="text-xs text-gray-500">Dialog profesional dan coaching untuk peningkatan mutu.</p>
+                            </div>
+                        </div>
+                        <div id="monitoring-list-view" class="space-y-4"></div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-luxury border border-sage-lighter mb-6">
+                        <div class="flex justify-between items-center mb-4 border-b pb-3">
+                            <div>
+                                <h3 class="font-bold text-forest-dark">Laporan Komparasi Awal vs Akhir & Grafik</h3>
+                                <p class="text-xs text-gray-500">Perbandingan pengukuran awal dan akhir lintas siklus.</p>
+                            </div>
+                            <button onclick="window.print()" class="px-4 py-2 bg-forest text-white rounded-lg text-xs font-bold hover:bg-forest-dark shadow"><i class="fas fa-print mr-1"></i> Cetak Laporan</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                                <span class="text-xs font-bold text-orange-600 uppercase">Rata-rata Awal</span>
+                                <div class="text-3xl font-bold text-gray-800" id="mon-avg-awal">0.0</div>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+                                <span class="text-xs font-bold text-green-600 uppercase">Rata-rata Akhir</span>
+                                <div class="text-3xl font-bold text-gray-800" id="mon-avg-akhir">0.0</div>
+                            </div>
+                            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                <span class="text-xs font-bold text-blue-600 uppercase">Selisih Peningkatan</span>
+                                <div class="text-3xl font-bold text-blue-700" id="mon-avg-delta">+0.0</div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border mb-6"><div class="relative h-64"><canvas id="monitoringChart"></canvas></div></div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const menuConfig = [
+            { id: 'dashboard', label: 'Dashboard', icon: 'fa-home', group: '' },
+            { id: 'data', label: 'DATA', icon: 'fa-database', group: 'Data Utama' },
+            { id: 'plan', label: '01 PLAN', icon: 'fa-map-o', group: 'Alur PDCA' },
+            { id: 'do', label: '02 DO', icon: 'fa-play-circle', group: 'Alur PDCA' },
+            { id: 'check', label: '03 CHECK', icon: 'fa-check-square', group: 'Alur PDCA' },
+            { id: 'act', label: '04 ACT', icon: 'fa-bolt', group: 'Alur PDCA' },
+            { id: 'data-guru', label: 'Data Guru', icon: 'fa-users-cog', group: 'Menu Pendukung' },
+            { id: 'profil-sekolah', label: 'Profil Sekolah', icon: 'fa-school', group: 'Menu Pendukung' },
+            { id: 'generator-rpp', label: 'Generator RPP', icon: 'fa-file-alt', group: 'Menu Pendukung' },
+            { id: 'aplikasi-interaktif', label: 'Aplikasi Interaktif', icon: 'fa-th-large', group: 'Menu Pendukung' },
+            { id: 'komunitas-belajar', label: 'Komunitas Belajar', icon: 'fa-users', group: 'Menu Pendukung' },
+            { id: 'lesson-study', label: 'Lesson Study', icon: 'fa-search-plus', group: 'Menu Pendukung' },
+            { id: 'asisten-ai', label: 'Asisten AI', icon: 'fa-robot', group: 'Menu Pendukung' },
+            { id: 'monitoring-dan-dampak', label: 'Monitoring & Dampak', icon: 'fa-chart-pie', group: 'Menu Pendukung' }
+        ];
+
+        const interactiveAppsList = [
+            { name: "Canva", desc: "Desain materi belajar", url: "https://www.canva.com/", icon: "https://placehold.co/64x64/00c4cc/ffffff?text=C" },
+            { name: "Wordwall", desc: "Game pembelajaran", url: "https://wordwall.net/", icon: "https://placehold.co/64x64/ff7500/ffffff?text=W" },
+            { name: "Quizizz", desc: "Kuis interaktif", url: "https://wayground.com/", icon: "https://placehold.co/64x64/8833ff/ffffff?text=Q" },
+            { name: "Kahoot!", desc: "Kuis berbasis game", url: "https://kahoot.com/", icon: "https://placehold.co/64x64/46178f/ffffff?text=K" },
+            { name: "Blooket", desc: "Belajar sambil bermain", url: "https://www.blooket.com/", icon: "https://placehold.co/64x64/00b2ff/ffffff?text=B" },
+            { name: "Edpuzzle", desc: "Video dengan soal", url: "https://edpuzzle.com/", icon: "https://placehold.co/64x64/2485e9/ffffff?text=E" },
+            { name: "Nearpod", desc: "Presentasi interaktif", url: "https://nearpod.com/", icon: "https://placehold.co/64x64/1652f0/ffffff?text=N" },
+            { name: "Genially", desc: "Materi interaktif", url: "https://genially.com/", icon: "https://placehold.co/64x64/000000/ffffff?text=G" },
+            { name: "Mentimeter", desc: "Polling dan kuis", url: "https://www.mentimeter.com/", icon: "https://placehold.co/64x64/121826/ffffff?text=M" },
+            { name: "Padlet", desc: "Papan diskusi digital", url: "https://padlet.com/", icon: "https://placehold.co/64x64/f55c47/ffffff?text=P" },
+            { name: "Whiteboard.fi", desc: "Papan tulis online", url: "https://whiteboard.fi/", icon: "https://placehold.co/64x64/3b82f6/ffffff?text=W" },
+            { name: "Baamboozle", desc: "Game untuk kelas", url: "https://www.baamboozle.com/", icon: "https://placehold.co/64x64/ffb800/ffffff?text=B" },
+            { name: "LearningApps", desc: "Latihan interaktif", url: "https://learningapps.org/", icon: "https://placehold.co/64x64/ffcd38/ffffff?text=L" },
+            { name: "Educandy", desc: "Game edukasi", url: "https://www.educandy.com/", icon: "https://placehold.co/64x64/10b981/ffffff?text=E" },
+            { name: "Flippity", desc: "Media dari Google Sheets", url: "https://www.flippity.net/", icon: "https://placehold.co/64x64/3b82f6/ffffff?text=F" },
+            { name: "PhET", desc: "Simulasi sains", url: "https://phet.colorado.edu/", icon: "https://placehold.co/64x64/000000/ffffff?text=Ph" },
+            { name: "Educaplay", desc: "Aktivitas pembelajaran interaktif", url: "https://www.educaplay.com/", icon: "https://placehold.co/64x64/0088cc/ffffff?text=Ed" },
+            { name: "BookWidgets", desc: "Aktivitas dan latihan digital", url: "https://www.bookwidgets.com/", icon: "https://placehold.co/64x64/ef4444/ffffff?text=BW" }
+        ];
+
+        const DB_NAME = 'GELIS_DIGITAL_DB_V15';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'app_store';
+
+        const idbStorage = {
+            db: null,
+            open() {
+                return new Promise((resolve, reject) => {
+                    if (this.db) return resolve(this.db);
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => { this.db = request.result; resolve(this.db); };
+                    request.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
+                    };
+                });
+            },
+            async get(key) {
+                const db = await this.open();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(STORE_NAME, 'readonly');
+                    const store = tx.objectStore(STORE_NAME);
+                    const req = store.get(key);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+            },
+            async set(key, val) {
+                const db = await this.open();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    const req = store.put(val, key);
+                    req.onsuccess = () => resolve(true);
+                    req.onerror = () => reject(req.error);
+                });
+            }
+        };
+
+        const app = {
+            currentUser: null,
+            currentRole: 'guru',
+            isOnline: false,
+            pendingSync: false,
+            importedDataPreview: null,
+            monitoringChart: null,
+            pbdData: [],
+            firebaseUser: null,
+            cachedData: null,
+
+            async init() {
+                this.renderMenu();
+                this.setupEvents();
+                this.renderInteractiveAppsGrid();
+                
+                const today = new Date().toISOString().split('T')[0];
+                const tglEl = document.getElementById('rpp-tgl');
+                if (tglEl) tglEl.value = today;
+
+                setTimeout(async () => {
+                    if (window.firebaseReady) {
+                        try {
+                            if (window.initialAuthToken) {
+                                await window.fbSignInWithCustomToken(window.fbAuth, window.initialAuthToken);
+                            } else {
+                                await window.fbSignInAnonymously(window.fbAuth);
+                            }
+                            this.firebaseUser = window.fbAuth.currentUser;
+                            this.isOnline = true;
+                            this.updateConnectionStatus('online', this.firebaseUser ? this.firebaseUser.email : null);
+                        } catch (error) {
+                            console.warn("Firebase Auth fallback triggered:", error.message);
+                            this.isOnline = false;
+                            this.updateConnectionStatus('offline');
+                        }
+                    } else {
+                        this.isOnline = false;
+                        this.updateConnectionStatus('offline');
+                    }
+                }, 300);
+
+                let data = await idbStorage.get('GELIS_DATA_V15');
+                if (!data) {
+                    data = this.getEmptyDataState();
+                    await idbStorage.set('GELIS_DATA_V15', data);
+                }
+                this.cachedData = data;
+
+                const storedPBD = await idbStorage.get('GELIS_PBD_DATA');
+                if (storedPBD && storedPBD.length > 0) {
+                    this.pbdData = storedPBD;
+                    document.getElementById('pbd-upload-section').classList.add('hidden');
+                    document.getElementById('pbd-status-indicator').classList.remove('hidden');
+                } else {
+                    this.pbdData = [
+                        { indikator: "D.1 Kualitas Pembelajaran (Skor 62,14)", skor: "62,14", akarMasalah: ["D.1.1 Manajemen kelas", "D.1.3 Metode Pembelajaran", "D.2.1 Belajar tentang pembelajaran"], kegiatanBenahi: ["Pelatihan atau peningkatan kompetensi guru", "Diskusi dan refleksi melalui komunitas belajar", "Perencanaan dan implementasi strategi pembelajaran", "Supervisi akademik dan tindak lanjut perbaikan pembelajaran"] },
+                        { indikator: "A.3 Karakter (Skor 59,63)", skor: "59,63", akarMasalah: ["A.3.4 Nalar Kritis"], kegiatanBenahi: ["Program penguatan karakter dan nalar kritis", "Diskusi dan refleksi melalui komunitas belajar"] },
+                        { indikator: "D.8 Iklim Kebinekaan (Skor 69,87)", skor: "69,87", akarMasalah: ["D.8.3 Toleransi dan kesetaraan peserta didik", "D.8.1 Toleransi agama dan budaya"], kegiatanBenahi: ["Program penguatan toleransi dan kesetaraan", "Diskusi dan refleksi melalui komunitas belajar"] },
+                        { indikator: "A.1 Kemampuan Literasi (Capaian 77,78%)", skor: "77,78%", akarMasalah: ["Kompetensi Membaca Teks Informasi"], kegiatanBenahi: ["Program peningkatan literasi dan numerasi"] },
+                        { indikator: "A.2 Kemampuan Numerasi (Capaian 77,78%)", skor: "77,78%", akarMasalah: ["A.2.3 Kompetensi pada domain Geometri"], kegiatanBenahi: ["Program peningkatan literasi dan numerasi"] },
+                        { indikator: "D.4 Iklim Keamanan Satuan Pendidikan (Skor 79,6)", skor: "79,6", akarMasalah: ["D.4.7 Pemahaman dan sikap guru tentang kekerasan seksual", "E.5.1 Program dan kebijakan tentang perundungan"], kegiatanBenahi: ["Program pencegahan dan penanganan perundungan"] }
+                    ];
+                }
+
+                this.postInit();
+            },
+
+            renderInteractiveAppsGrid() {
+                const gridEl = document.getElementById('interactive-apps-grid');
+                if(!gridEl) return;
+                let html = '';
+                interactiveAppsList.forEach(appItem => {
+                    html += `
+                        <a href="${appItem.url}" target="_blank" rel="noopener noreferrer" class="bg-white rounded-2xl p-5 border border-sage-lighter shadow-sm hover:shadow-luxury hover:border-forest/40 transition-all flex flex-col items-center text-center group cursor-pointer">
+                            <div class="w-14 h-14 rounded-xl flex items-center justify-center bg-gray-50 mb-3 shadow-inner group-hover:scale-105 transition-transform overflow-hidden">
+                                <img src="${appItem.icon}" alt="${appItem.name}" class="w-10 h-10 object-contain rounded-lg" onerror="this.src='https://placehold.co/64x64/2C5F2D/ffffff?text=${appItem.name.charAt(0)}'">
+                            </div>
+                            <h3 class="font-bold text-sm text-forest-dark group-hover:text-forest transition-colors mb-1">${appItem.name}</h3>
+                            <p class="text-[11px] text-gray-500 leading-tight line-clamp-2">${appItem.desc}</p>
+                        </a>
+                    `;
+                });
+                gridEl.innerHTML = html;
+            },
+
+            switchRole(role) {
+                this.currentRole = role;
+                const badge = document.getElementById('logged-role-badge');
+                if (badge) badge.textContent = 'Peran: ' + (role === 'kepsek' ? 'Kepala Sekolah (Pemimpin)' : 'Guru (Pelaksana)');
+                
+                const kepsekElements = document.querySelectorAll('.role-kepsek-only');
+                kepsekElements.forEach(el => {
+                    if (role === 'kepsek') el.classList.remove('hidden');
+                    else el.classList.add('hidden');
+                });
+
+                const guruElements = document.querySelectorAll('.role-guru-only');
+                guruElements.forEach(el => {
+                    if (role === 'guru') el.classList.remove('hidden');
+                    else el.classList.add('hidden');
+                });
+
+                this.refreshAll();
+            },
+
+            updateConnectionStatus(status, email = null) {
+                const dot = document.getElementById('connection-status-dot');
+                const label = document.getElementById('connection-status-label');
+                const userInfo = document.getElementById('current-user-info');
+                const authBtn = document.getElementById('auth-action-btn');
+
+                if (status === 'online') {
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-green-500 inline-block';
+                    label.textContent = 'Tersambung (Cloud)';
+                    if (email) {
+                        userInfo.textContent = email;
+                        authBtn.textContent = 'Logout';
+                        authBtn.setAttribute('onclick', 'app.showAuthModal()');
+                    } else {
+                        userInfo.textContent = 'Mode Tamu';
+                        authBtn.textContent = 'Login';
+                        authBtn.setAttribute('onclick', 'app.showAuthModal()');
+                    }
+                } else {
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-forest inline-block';
+                    label.textContent = 'Mode Lokal Mandiri';
+                    userInfo.textContent = 'Lokal Storage';
+                    authBtn.textContent = 'Login';
+                }
+            },
+
+            getEmptyDataState() {
+                const today = new Date().toISOString().split('T')[0];
+                return {
+                    version: 1,
+                    lastUpdated: new Date().toISOString(),
+                    rapor: { tahun: '2026', skorD1: 0 },
+                    activeCycleId: '',
+                    cycles: [],
+                    asesmen: [],
+                    plan: [],
+                    do: [],
+                    check: [],
+                    act_followups: [],
+                    monitoring: [],
+                    kombel: [],
+                    lessonStudy: [],
+                    teachers: [],
+                    schoolProfile: { nama: 'SDN Gupit', npsn: '20305678', alamat: 'Gedangsari', kepsek: 'Erma Fitri Astuti, M.Pd.', nip: '' }
+                };
+            },
+
+            async getLocalStore() {
+                if (this.cachedData) return this.cachedData;
+                let data = await idbStorage.get('GELIS_DATA_V15');
+                if (!data) {
+                    data = this.getEmptyDataState();
+                    await idbStorage.set('GELIS_DATA_V15', data);
+                }
+                if (!data.cycles) data.cycles = [];
+                if (!data.monitoring) data.monitoring = [];
+                this.cachedData = data;
+                return data;
+            },
+
+            async saveLocalStore(data) {
+                this.cachedData = data;
+                await idbStorage.set('GELIS_DATA_V15', data);
+            },
+
+            postInit() {
+                this.refreshAll();
+                this.navigate('dashboard');
+                this.switchRole('guru');
+            },
+
+            renderMenu() {
+                const menu = document.getElementById('nav-menu');
+                let lastGroup = undefined;
+                let html = '';
+
+                menuConfig.forEach(m => {
+                    if (m.group !== lastGroup) {
+                        lastGroup = m.group;
+                        if (lastGroup) {
+                            html += '<div class="pt-3 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-gold-light opacity-80">' + lastGroup + '</div>';
+                        }
+                    }
+                    html += `
+                        <li>
+                            <a href="#${m.id}" onclick="app.navigate('${m.id}', '${m.label}', this); return false;" class="nav-link flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-ivory/80 hover:bg-forest/60 hover:text-white transition-all" data-target="${m.id}">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-5 text-center"><i class="fas ${m.icon}"></i></div>
+                                    <span>${m.label}</span>
+                                </div>
+                            </a>
+                        </li>
+                    `;
+                });
+                menu.innerHTML = html;
+            },
+
+            navigate(pageId, titleOverride, clickedEl = null) {
+                window.location.hash = pageId;
+                document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('bg-forest', 'text-white', 'shadow'));
+                const activeLink = clickedEl || document.querySelector(`.nav-link[data-target="${pageId}"]`);
+                if (activeLink) activeLink.classList.add('bg-forest', 'text-white', 'shadow');
+
+                document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+                const targetPage = document.getElementById('page-' + pageId);
+                if (targetPage) targetPage.classList.add('active');
+
+                const found = menuConfig.find(m => m.id === pageId);
+                document.getElementById('header-title').textContent = titleOverride || (found ? found.label : 'Dashboard');
+
+                if (window.innerWidth < 768) {
+                    document.getElementById('sidebar').classList.remove('open');
+                    document.getElementById('sidebar-overlay').classList.add('hidden');
+                }
+            },
+
+            setupEvents() {
+                const close = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.add('hidden'); };
+                document.getElementById('open-sidebar').onclick = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').classList.remove('hidden'); };
+                document.getElementById('close-sidebar').onclick = close;
+                document.getElementById('sidebar-overlay').onclick = close;
+            },
+
+            showSettingsModal() { document.getElementById('settings-modal').classList.remove('hidden'); },
+            hideSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); },
+            showAuthModal() { document.getElementById('auth-modal').classList.remove('hidden'); },
+            hideAuthModal() { document.getElementById('auth-modal').classList.add('hidden'); },
+            showApiKeyModal() { 
+                document.getElementById('apikey-modal').classList.remove('hidden');
+                idbStorage.get('GEMINI_API_KEY').then(k => { if(k) document.getElementById('gemini-apikey-input').value = k; });
+            },
+            hideApiKeyModal() { document.getElementById('apikey-modal').classList.add('hidden'); },
+            showNewCycleModal() { document.getElementById('new-cycle-modal').classList.remove('hidden'); },
+            hideNewCycleModal() { document.getElementById('new-cycle-modal').classList.add('hidden'); },
+
+            async saveApiKey() {
+                const k = document.getElementById('gemini-apikey-input').value.trim();
+                if(!k) { alert('API Key kosong.'); return; }
+                await idbStorage.set('GEMINI_API_KEY', k);
+                alert('Gemini API Key berhasil disimpan!');
+                this.hideApiKeyModal();
+            },
+
+            async handleLogin() {
+                const email = document.getElementById('auth-email').value.trim();
+                const errEl = document.getElementById('auth-error-msg');
+                errEl.classList.add('hidden');
+                
+                if(!email) {
+                    errEl.textContent = 'Email wajib diisi.';
+                    errEl.classList.remove('hidden');
+                    return;
+                }
+
+                if (email.includes('admin') || email.includes('kepsek')) {
+                    this.switchRole('kepsek');
+                } else {
+                    this.switchRole('guru');
+                }
+                this.currentUser = { email };
+                await idbStorage.set('GELIS_CURRENT_USER', JSON.stringify(this.currentUser));
+                this.updateConnectionStatus('online', email);
+                this.hideAuthModal();
+                alert(`Berhasil masuk sebagai ${email}`);
+                this.refreshAll();
+            },
+
+            async handleLogout() {
+                this.currentUser = null;
+                await idbStorage.set('GELIS_CURRENT_USER', null);
+                this.switchRole('guru');
+                this.updateConnectionStatus('online', null);
+                this.hideAuthModal();
+                this.refreshAll();
+            },
+
+            async refreshAll() {
+                const db = await this.getLocalStore();
+                
+                if(document.getElementById('rapor-tahun')) {
+                    document.getElementById('rapor-tahun').value = (db.rapor && db.rapor.tahun) ? db.rapor.tahun : '2026';
+                    document.getElementById('rapor-skor').value = (db.rapor && db.rapor.skorD1) ? db.rapor.skorD1 : '';
+                }
+
+                if(document.getElementById('sch-nama')) {
+                    document.getElementById('sch-nama').value = (db.schoolProfile && db.schoolProfile.nama) ? db.schoolProfile.nama : 'SDN Gupit';
+                    document.getElementById('sch-npsn').value = (db.schoolProfile && db.schoolProfile.npsn) ? db.schoolProfile.npsn : '20305678';
+                    document.getElementById('sch-alamat').value = (db.schoolProfile && db.schoolProfile.alamat) ? db.schoolProfile.alamat : 'Gedangsari';
+                    document.getElementById('sch-kepsek').value = (db.schoolProfile && db.schoolProfile.kepsek) ? db.schoolProfile.kepsek : 'Erma Fitri Astuti, M.Pd.';
+                    document.getElementById('sch-nipkepsek').value = (db.schoolProfile && db.schoolProfile.nip) ? db.schoolProfile.nip : '';
+                }
+
+                this.renderDashboard(db);
+                this.renderAsesmen(db);
+                this.renderPlan(db);
+                this.renderDo(db);
+                this.renderCheck(db);
+                this.renderAct(db);
+                this.renderKombel(db);
+                this.renderLs(db);
+                this.renderTeachers(db);
+                this.renderMonitoring(db);
+            },
+
+            renderDashboard(db) {
+                const gTitle = document.getElementById('dash-greeting-title');
+                const gDesc = document.getElementById('dash-greeting-desc');
+                const dGuru = document.getElementById('dash-content-guru');
+                const dKepsek = document.getElementById('dash-content-kepsek');
+                if(!gTitle) return;
+
+                if (this.currentRole === 'kepsek') {
+                    gTitle.textContent = 'Dashboard Kepemimpinan (Kepala Sekolah)';
+                    gDesc.textContent = 'Pemantauan progres siklus PDCA seluruh guru dan rekapitulasi supervisi akademik.';
+                    if(dGuru) dGuru.classList.add('hidden');
+                    if(dKepsek) dKepsek.classList.remove('hidden');
+
+                    if(document.getElementById('kepsek-stat-teachers')) document.getElementById('kepsek-stat-teachers').textContent = (db.teachers || []).length;
+                    if(document.getElementById('kepsek-stat-cycles')) document.getElementById('kepsek-stat-cycles').textContent = (db.cycles || []).length;
+                    if(document.getElementById('kepsek-stat-obs')) document.getElementById('kepsek-stat-obs').textContent = (db.monitoring || []).length;
+                    if(document.getElementById('kepsek-stat-rapor')) document.getElementById('kepsek-stat-rapor').textContent = (db.rapor && db.rapor.skorD1) ? db.rapor.skorD1 : 'Belum ada';
+
+                    const tList = document.getElementById('kepsek-teachers-progress-list');
+                    if (tList) {
+                        tList.innerHTML = '';
+                        if((db.teachers || []).length === 0) {
+                            tList.innerHTML = '<div class="text-gray-400 italic">Belum ada data guru terdaftar.</div>';
+                        } else {
+                            (db.teachers || []).forEach(t => {
+                                if (t.jabatan && t.jabatan.toLowerCase() !== 'kepala sekolah') {
+                                    tList.innerHTML += `
+                                        <div class="p-3 bg-gray-50 rounded-xl border flex justify-between items-center">
+                                            <div>
+                                                <b>${t.nama}</b> <span class="text-gray-400">(${t.jabatan})</span>
+                                            </div>
+                                            <span class="px-2.5 py-1 bg-green-100 text-green-800 rounded font-bold text-xs">Aktif</span>
+                                        </div>
+                                    `;
+                                }
+                            });
+                        }
+                    }
+                } else {
+                    gTitle.textContent = 'Dashboard Pembelajaran (Guru)';
+                    gDesc.textContent = 'Fokus perbaikan pembelajaran mandiri dan tanggapan umpan balik.';
+                    if(dGuru) dGuru.classList.remove('hidden');
+                    if(dKepsek) dKepsek.classList.add('hidden');
+
+                    if(document.getElementById('dash-skor-rapor')) document.getElementById('dash-skor-rapor').textContent = (db.rapor && db.rapor.skorD1) ? db.rapor.skorD1 : 'Belum ada';
+                    
+                    let myCycles = db.cycles || [];
+                    if (this.currentUser) {
+                        myCycles = myCycles.filter(c => c.userEmail === this.currentUser.email);
+                    }
+                    
+                    let activeCycle = null;
+                    if (myCycles.length > 0) {
+                        activeCycle = myCycles.find(c => c.id === db.activeCycleId);
+                        if (!activeCycle) activeCycle = myCycles[0];
+                    }
+
+                    if (activeCycle) {
+                        if(document.getElementById('dash-active-cycle-name')) document.getElementById('dash-active-cycle-name').textContent = activeCycle.title;
+                        if(document.getElementById('dash-cycle-title')) document.getElementById('dash-cycle-title').textContent = activeCycle.title;
+                        if(document.getElementById('dash-cycle-summary')) document.getElementById('dash-cycle-summary').innerHTML = '<p><strong>Akar Masalah:</strong> ' + activeCycle.problem + '</p><p><strong>Status:</strong> <span class="text-forest font-bold">' + activeCycle.status + '</span></p>';
+                    } else {
+                        if(document.getElementById('dash-active-cycle-name')) document.getElementById('dash-active-cycle-name').textContent = 'Belum ada siklus';
+                        if(document.getElementById('dash-cycle-title')) document.getElementById('dash-cycle-title').textContent = '-';
+                        if(document.getElementById('dash-cycle-summary')) document.getElementById('dash-cycle-summary').innerHTML = '<p>Belum ada data</p>';
+                    }
+                    if(document.getElementById('dash-cycle-count')) document.getElementById('dash-cycle-count').textContent = 'Total Siklus Pribadi: ' + myCycles.length;
+
+                    const fbBox = document.getElementById('dash-teacher-feedback-summary');
+                    if (fbBox) {
+                        fbBox.innerHTML = 'Belum ada catatan umpan balik dari kepala sekolah.';
+                    }
+                }
+            },
+
+            async saveSchoolProfile() {
+                if (this.currentRole !== 'kepsek') { alert('Akses ditolak: Hanya Kepala Sekolah yang dapat mengubah profil sekolah.'); return; }
+                const db = await this.getLocalStore();
+                db.schoolProfile = {
+                    nama: document.getElementById('sch-nama').value,
+                    npsn: document.getElementById('sch-npsn').value,
+                    alamat: document.getElementById('sch-alamat').value,
+                    kepsek: document.getElementById('sch-kepsek').value,
+                    nip: document.getElementById('sch-nipkepsek').value
+                };
+                await this.saveLocalStore(db);
+                alert('Profil sekolah disimpan!');
+            },
+
+            async saveRapor() {
+                if (this.currentRole !== 'kepsek') { alert('Akses ditolak: Hanya Kepala Sekolah yang dapat mengubah Rapor Pendidikan.'); return; }
+                const db = await this.getLocalStore();
+                db.rapor = { tahun: document.getElementById('rapor-tahun').value, skorD1: parseFloat(document.getElementById('rapor-skor').value) || 0 };
+                await this.saveLocalStore(db);
+                alert('Rapor Pendidikan disimpan!');
+                this.refreshAll();
+            },
+
+            renderAsesmen(db) {
+                const tb = document.getElementById('asesmen-table-body');
+                if (!tb) return;
+                tb.innerHTML = '';
+                if (!(db.asesmen || []).length) {
+                    tb.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-xs text-gray-400">Belum ada data pengukuran.</td></tr>';
+                    return;
+                }
+                db.asesmen.forEach(a => {
+                    const btnHtml = this.currentRole === 'kepsek' ? '<button onclick="app.deleteAsesmen(\'' + a.id + '\')" class="text-red-500 hover:text-red-700 text-xs"><i class="fas fa-trash"></i></button>' : '<span class="text-xs text-gray-400">Read-only</span>';
+                    tb.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-3"><b>${a.guru}</b><br><span class="text-xs text-gray-400">Aktivitas: ${a.tgl}</span></td>
+                            <td class="p-3 text-xs">${a.instrumen}</td>
+                            <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${a.fase === 'Awal' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}">${a.fase}</span></td>
+                            <td class="p-3 text-center font-bold">${a.skor}</td>
+                            <td class="p-3 text-right">${btnHtml}</td>
+                        </tr>
+                    `;
+                });
+            },
+            showAsesmenForm() {
+                if (this.currentRole !== 'kepsek') { alert('Akses ditolak: Hanya Kepala Sekolah yang dapat menambah asesmen awal/akhir.'); return; }
+                document.getElementById('asesmen-list-view').classList.add('hidden');
+                document.getElementById('asesmen-form-view').classList.remove('hidden');
+                document.getElementById('form-asesmen').reset();
+                document.getElementById('as-tgl').value = new Date().toISOString().split('T')[0];
+            },
+            hideAsesmenForm() { document.getElementById('asesmen-list-view').classList.remove('hidden'); document.getElementById('asesmen-form-view').classList.add('hidden'); },
+            async saveAsesmen(e) {
+                e.preventDefault();
+                const db = await this.getLocalStore();
+                if (!db.asesmen) db.asesmen = [];
+                db.asesmen.push({
+                    id: Date.now().toString(), cycleId: db.activeCycleId,
+                    guru: document.getElementById('as-guru').value, tgl: document.getElementById('as-tgl').value,
+                    instrumen: document.getElementById('as-instrumen').value, fase: document.getElementById('as-fase').value,
+                    indikator: document.getElementById('as-indikator').value, skor: parseFloat(document.getElementById('as-skor').value),
+                    catatan: document.getElementById('as-catatan').value
+                });
+                await this.saveLocalStore(db);
+                this.hideAsesmenForm();
+                this.refreshAll();
+                alert('Pengukuran disimpan!');
+            },
+            async deleteAsesmen(id) {
+                if (confirm('Hapus pengukuran?')) {
+                    const db = await this.getLocalStore();
+                    db.asesmen = db.asesmen.filter(x => x.id !== id);
+                    await this.saveLocalStore(db);
+                    this.refreshAll();
+                }
+            },
+
+            toggleRppForm() {
+                const c = document.getElementById('rpp-form-container');
+                const icon = document.getElementById('rpp-form-toggle-icon');
+                if (c.classList.contains('hidden')) {
+                    c.classList.remove('hidden');
+                    icon.className = 'fas fa-chevron-up mr-1';
+                    if(document.getElementById('sch-nama')) {
+                         document.getElementById('rpp-sekolah').value = document.getElementById('sch-nama').value;
+                    }
+                } else { 
+                    c.classList.add('hidden'); 
+                    icon.className = 'fas fa-chevron-down mr-1'; 
+                }
+            },
+
+            analyzeCP() {
+                const cp = document.getElementById('rpp-cp').value;
+                const materi = document.getElementById('rpp-materi').value;
+                if (!cp || !materi) {
+                    alert('Mohon isi Capaian Pembelajaran (CP) dan Materi/Topik Utama terlebih dahulu.');
+                    return;
+                }
+                const tps = [
+                    { level: 'C1 (Mengingat)', text: 'Melalui pengamatan visual terhadap media nyata yang disajikan (C), peserta didik (A) dapat mengidentifikasi komponen dasar dari materi ' + materi + ' (B) dengan ketepatan minimal 3 komponen yang benar (D).' },
+                    { level: 'C2 (Memahami)', text: 'Setelah menyimak penjelasan dan melakukan tanya jawab (C), peserta didik (A) mampu menjelaskan konsep utama ' + materi + ' menggunakan bahasanya sendiri (B) secara logis dan runtut (D).' },
+                    { level: 'C3 (Mengaplikasikan)', text: 'Dengan diberikan simulasi kasus kontekstual (C), peserta didik (A) mampu menerapkan prinsip ' + materi + ' dalam menyelesaikan permasalahan terkait (B) dengan langkah penyelesaian yang terstruktur dan valid (D).' },
+                    { level: 'C4 (Menganalisis)', text: 'Melalui aktivitas investigasi data secara berkelompok (C), peserta didik (A) dapat menganalisis hubungan sebab-akibat antar elemen pada materi ' + materi + ' (B) dengan menemukan sekurang-kurangnya 2 pola yang saling berkaitan (D).' }
+                ];
+                let html = '<div class="space-y-2 mt-2">';
+                tps.forEach((tp, idx) => {
+                    html += `
+                        <div class="flex items-start gap-2 p-2 bg-white border border-gray-200 hover:border-forest/40 rounded-lg shadow-sm transition">
+                            <input type="checkbox" name="rpp-tp-cb" class="tp-checkbox mt-1 text-forest focus:ring-forest cursor-pointer" id="tp-cb-${idx}">
+                            <div class="flex-1">
+                                <span class="text-[10px] font-bold text-forest bg-forest/10 border border-forest/20 px-2 py-0.5 rounded uppercase tp-level-badge" id="tp-lvl-${idx}">${tp.level}</span>
+                                <textarea class="w-full text-xs text-gray-700 mt-1 border border-gray-300 rounded outline-none p-1.5 resize-none bg-transparent" id="tp-text-${idx}" rows="2">${tp.text}</textarea>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '<div class="flex gap-2 mt-3 border-t pt-2"><button type="button" onclick="app.selectAllTP()" class="px-3 py-1 bg-sage-lighter text-forest text-xs font-bold rounded shadow-sm">Pilih Semua TP</button></div></div>';
+                const container = document.getElementById('rpp-tp-container');
+                container.innerHTML = html;
+                container.classList.remove('hidden');
+                alert('Analisis CP berhasil. Silakan centang TP yang ingin digunakan.');
+            },
+
+            selectAllTP() {
+                document.querySelectorAll('.tp-checkbox').forEach(cb => { cb.checked = true; });
+            },
+
+            generateRpp(e) {
+                e.preventDefault();
+                const p = {
+                    sekolah: document.getElementById('rpp-sekolah').value,
+                    penyusun: document.getElementById('rpp-penyusun').value,
+                    nip: document.getElementById('rpp-nip').value,
+                    mapel: document.getElementById('rpp-mapel').value === 'Lainnya' ? (document.getElementById('rpp-mapel-lainnya').value || 'Mata Pelajaran') : document.getElementById('rpp-mapel').value,
+                    kelas: document.getElementById('rpp-kelas').value,
+                    semester: document.getElementById('rpp-semester').value,
+                    materi: document.getElementById('rpp-materi').value,
+                    tgl: document.getElementById('rpp-tgl').value,
+                    pertemuan: parseInt(document.getElementById('rpp-pertemuan').value) || 1,
+                    jp: parseInt(document.getElementById('rpp-jp').value) || 2,
+                    menit: parseInt(document.getElementById('rpp-menit').value) || 35,
+                    cp: document.getElementById('rpp-cp').value,
+                    model: document.getElementById('rpp-model').value,
+                    kepsek: document.getElementById('sch-kepsek') ? document.getElementById('sch-kepsek').value : 'Erma Fitri Astuti, M.Pd.',
+                    nipKepsek: document.getElementById('sch-nipkepsek') ? document.getElementById('sch-nipkepsek').value : ''
+                };
+                p.pengalaman = Array.from(document.querySelectorAll('input[name="rpp-pengalaman"]:checked')).map(el => el.value);
+                p.tpData = Array.from(document.querySelectorAll('.tp-checkbox:checked')).map(el => {
+                    const idx = el.id.split('-')[2];
+                    return document.getElementById('tp-text-' + idx).value;
+                });
+                if (p.tpData.length === 0) {
+                    alert("Mohon centang minimal satu Tujuan Pembelajaran (TP).");
+                    return;
+                }
+                p.tp = p.tpData;
+                p.metode = Array.from(document.querySelectorAll('input[name="rpp-metode-cb"]:checked')).map(el => el.value);
+                
+                const htmlOutput = this.buildAutomatedRPPContent(p, 'lingkungan sekitar sekolah');
+                document.getElementById('rpp-document-output').innerHTML = htmlOutput;
+                document.getElementById('rpp-form-container').classList.add('hidden');
+                document.getElementById('rpp-preview-wrapper').classList.remove('hidden');
+            },
+
+            buildAutomatedRPPContent(p, sumberLingkungan) {
+                const totalMenit = p.jp * p.menit;
+                const tpListHTML = p.tp.map(t => `<li style="margin-bottom: 4px;">${t}</li>`).join('');
+                return `
+                    <div style="text-align: center; margin-bottom: 24px; border-bottom: 2px solid black; padding-bottom: 12px;">
+                        <h2 style="font-weight: bold; font-size: 14pt; text-transform: uppercase;">RENCANA PELAKSANAAN PEMBELAJARAN (RPP)</h2>
+                    </div>
+                    <table style="width: 100%; text-align: left; margin-bottom: 24px; border-collapse: collapse; border: 1px solid black; font-size: 11pt;">
+                        <tr><th style="border: 1px solid black; padding: 6px; width: 35%; background-color: #f0f0f0;">Nama Penyusun</th><td style="border: 1px solid black; padding: 6px;">${p.penyusun}</td></tr>
+                        <tr><th style="border: 1px solid black; padding: 6px; background-color: #f0f0f0;">Satuan Pendidikan</th><td style="border: 1px solid black; padding: 6px;">${p.sekolah}</td></tr>
+                        <tr><th style="border: 1px solid black; padding: 6px; background-color: #f0f0f0;">Mata Pelajaran</th><td style="border: 1px solid black; padding: 6px;">${p.mapel}</td></tr>
+                        <tr><th style="border: 1px solid black; padding: 6px; background-color: #f0f0f0;">Topik Pembelajaran</th><td style="border: 1px solid black; padding: 6px; font-weight: bold;">${p.materi}</td></tr>
+                        <tr><th style="border: 1px solid black; padding: 6px; background-color: #f0f0f0;">Fase / Kelas</th><td style="border: 1px solid black; padding: 6px;">${p.kelas}</td></tr>
+                    </table>
+                    <div style="margin-bottom: 16px;">
+                        <h4 style="font-weight: bold; text-transform: uppercase; background-color: #e5e7eb; padding: 4px; margin-bottom: 8px;">Tujuan Pembelajaran (TP)</h4>
+                        <ol style="padding-left: 20px; font-size: 11pt;">${tpListHTML}</ol>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; text-align: center; margin-top: 48px; font-size: 11pt;">
+                        <div><p>Mengetahui,</p><p>Kepala Sekolah</p><br><br><p style="font-weight: bold; text-decoration: underline;">${p.kepsek}</p></div>
+                        <div><p>${p.sekolah}, ${p.tgl}</p><p>Guru Penyusun</p><br><br><p style="font-weight: bold; text-decoration: underline;">${p.penyusun}</p></div>
+                    </div>
+                `;
+            },
+
+            exportWord() {
+                const contentNode = document.getElementById('rpp-document-output');
+                if(!contentNode) return;
+                const blob = new Blob(['\ufeff', contentNode.innerHTML], { type: 'application/msword' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url; link.download = 'RPP_GELIS.doc';
+                link.click();
+            },
+
+            exportPDF() {
+                const element = document.getElementById('rpp-document-output');
+                if(typeof html2pdf !== 'undefined') {
+                    html2pdf().from(element).save('RPP_GELIS.pdf');
+                } else {
+                    window.print();
+                }
+            },
+
+            renderPlan(db) {
+                const container = document.getElementById('plan-list-view');
+                if (!container) return;
+                container.innerHTML = '';
+                const active = (db.cycles || []).find(c => c.id === db.activeCycleId) || db.cycles[0];
+                const badge = document.getElementById('plan-cycle-badge');
+                if(badge) badge.textContent = `Siklus Aktif: ${active ? active.title : '#1'}`;
+
+                let filtered = (db.plan || []).filter(p => !p.cycleId || p.cycleId === db.activeCycleId);
+                if (this.currentRole === 'guru' && this.currentUser) {
+                    filtered = filtered.filter(p => p.userEmail === this.currentUser.email);
+                }
+
+                if (!filtered.length) {
+                    container.innerHTML = `<div class="p-4 text-center text-xs text-gray-400 bg-gray-50 rounded-xl">Belum ada rencana (PLAN) untuk siklus ini.</div>`;
+                    return;
+                }
+                filtered.forEach(p => {
+                    container.innerHTML += `
+                        <div class="p-4 bg-gray-50 rounded-xl border flex justify-between items-start">
+                            <div class="space-y-1 w-full">
+                                <div class="flex justify-between items-center w-full">
+                                    <span class="text-[10px] font-bold text-forest uppercase">Tgl: ${p.tanggal} — PIC: ${p.pic}</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded ${p.status === 'Selesai' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}">${p.status}</span>
+                                </div>
+                                <h4 class="font-bold text-sm text-gray-800">Masalah: ${p.masalah}</h4>
+                                <p class="text-xs text-gray-600"><strong>Tujuan:</strong> ${p.tujuan}</p>
+                                <p class="text-xs text-gray-600"><strong>Strategi:</strong> ${p.strategi}</p>
+                            </div>
+                            <button onclick="app.deletePlan('${p.id}')" class="text-red-500 text-xs ml-3 role-guru-only"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                });
+            },
+
+            handlePBDUpload(e) {
+                const file = e.target.files[0];
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const data = evt.target.result;
+                        const workbook = XLSX.read(data, {type: 'binary'});
+                        const sheetName = workbook.SheetNames[0];
+                        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {header: 1});
+                        alert("File Rapor PBD berhasil dibaca!");
+                        document.getElementById('pbd-upload-section').classList.add('hidden');
+                        document.getElementById('pbd-status-indicator').classList.remove('hidden');
+                        this.populatePlanIndikatorDropdown();
+                    } catch (err) {
+                        alert("Gagal memproses file Excel: " + err.message);
+                    }
+                };
+                reader.readAsBinaryString(file);
+            },
+
+            populatePlanIndikatorDropdown() {
+                const sel = document.getElementById('plan-indikator-select');
+                if(!sel) return;
+                sel.innerHTML = '<option value="">-- Pilih Indikator --</option>';
+                this.pbdData.forEach(d => {
+                    sel.innerHTML += `<option value="${d.indikator}">${d.indikator}</option>`;
+                });
+            },
+
+            onPlanIndikatorChange() {
+                const val = document.getElementById('plan-indikator-select').value;
+                const akarCont = document.getElementById('plan-akar-container');
+                const stratCont = document.getElementById('plan-strategi-container');
+                if(!val) return;
+                const data = this.pbdData.find(d => d.indikator === val);
+                if(data) {
+                    akarCont.innerHTML = data.akarMasalah.map(a => `<label class="flex items-center gap-2"><input type="checkbox" name="plan_akar" value="${a}" class="text-forest"> ${a}</label>`).join('');
+                    stratCont.innerHTML = data.kegiatanBenahi.map(b => `<label class="flex items-center gap-2"><input type="checkbox" name="plan_strategi" value="${b}" class="text-forest"> ${b}</label>`).join('');
+                }
+            },
+
+            showPlanForm() {
+                if(this.currentRole === 'kepsek') return;
+                document.getElementById('plan-list-view').classList.add('hidden');
+                document.getElementById('plan-form-view').classList.remove('hidden');
+                document.getElementById('form-plan').reset();
+                document.getElementById('plan-tanggal').value = new Date().toISOString().split('T')[0];
+                this.populatePlanIndikatorDropdown();
+            },
+
+            hidePlanForm() { document.getElementById('plan-list-view').classList.remove('hidden'); document.getElementById('plan-form-view').classList.add('hidden'); },
+
+            async savePlan(e) {
+                e.preventDefault();
+                const db = await this.getLocalStore();
+                if (!db.plan) db.plan = [];
+                db.plan.push({
+                    id: Date.now().toString(),
+                    cycleId: db.activeCycleId,
+                    userEmail: this.currentUser?.email || 'guru@gelis.sch.id',
+                    masalah: document.getElementById('plan-indikator-select').value,
+                    tujuan: 'Meningkatkan kompetensi siswa.',
+                    strategi: 'Komunitas belajar & praktik.',
+                    pic: document.getElementById('plan-pic').value,
+                    tanggal: document.getElementById('plan-tanggal').value,
+                    status: document.getElementById('plan-status').value
+                });
+                await this.saveLocalStore(db);
+                this.hidePlanForm();
+                this.refreshAll();
+                alert('Rencana berhasil disimpan!');
+            },
+
+            async deletePlan(id) {
+                if(confirm('Hapus rencana?')) {
+                    const db = await this.getLocalStore();
+                    db.plan = db.plan.filter(x => x.id !== id);
+                    await this.saveLocalStore(db);
+                    this.refreshAll();
+                }
+            },
+
+            renderDo(db) {
+                const container = document.getElementById('do-list-view');
+                if (!container) return;
+                container.innerHTML = '';
+                const selectPlan = document.getElementById('do-plan-ref');
+                if (selectPlan) {
+                    selectPlan.innerHTML = '';
+                    (db.plan || []).forEach(p => selectPlan.innerHTML += `<option value="${p.id}">${p.masalah}</option>` );
+                }
+                let filtered = db.do || [];
+                if (!filtered.length) {
+                    container.innerHTML = `<div class="p-4 text-center text-xs text-gray-400 bg-gray-50 rounded-xl">Belum ada pelaksanaan (DO).</div>`;
+                    return;
+                }
+                filtered.forEach(d => {
+                    container.innerHTML += `<div class="p-4 bg-gray-50 rounded-xl border"><h4 class="font-bold text-sm">${d.kegiatan}</h4><p class="text-xs text-gray-600">${d.keterlaksanaan}</p></div>`;
+                });
+            },
+
+            showDoForm() { document.getElementById('do-list-view').classList.add('hidden'); document.getElementById('do-form-view').classList.remove('hidden'); },
+            hideDoForm() { document.getElementById('do-list-view').classList.remove('hidden'); document.getElementById('do-form-view').classList.add('hidden'); },
+            async saveDo(e) {
+                e.preventDefault();
+                const db = await this.getLocalStore();
+                if (!db.do) db.do = [];
+                db.do.push({
+                    id: Date.now().toString(),
+                    planId: document.getElementById('do-plan-ref').value,
+                    kegiatan: document.getElementById('do-kegiatan').value,
+                    keterlaksanaan: document.getElementById('do-keterlaksanaan').value,
+                    status: document.getElementById('do-status').value
+                });
+                await this.saveLocalStore(db);
+                this.hideDoForm();
+                this.refreshAll();
+                alert('Pelaksanaan disimpan!');
+            },
+
+            renderCheck(db) {
+                const container = document.getElementById('check-list-view');
+                if (!container) return;
+                container.innerHTML = (db.check || []).map(c => `<div class="p-4 bg-gray-50 rounded-xl border text-xs"><b>${c.tanggal}</b>: ${c.evaluasi}</div>`).join('') || '<div class="p-4 text-center text-xs text-gray-400">Belum ada evaluasi.</div>';
+            },
+            showCheckForm() { document.getElementById('check-list-view').classList.add('hidden'); document.getElementById('check-form-view').classList.remove('hidden'); },
+            hideCheckForm() { document.getElementById('check-list-view').classList.remove('hidden'); document.getElementById('check-form-view').classList.add('hidden'); },
+            async saveCheck(e) {
+                e.preventDefault();
+                const db = await this.getLocalStore();
+                if (!db.check) db.check = [];
+                db.check.push({ id: Date.now().toString(), tanggal: document.getElementById('chk-tanggal').value, evaluasi: document.getElementById('chk-evaluasi').value });
+                await this.saveLocalStore(db);
+                this.hideCheckForm();
+                this.refreshAll();
+                alert('Evaluasi disimpan!');
+            },
+
+            renderAct(db) {
+                const historyContainer = document.getElementById('cycles-history-list');
+                if (!historyContainer) return;
+                historyContainer.innerHTML = (db.cycles || []).map(c => `<div class="p-4 bg-gray-50 rounded-xl border text-xs"><b>${c.title}</b> (${c.status})</div>`).join('') || '<div class="p-4 text-center text-xs text-gray-400">Belum ada riwayat siklus.</div>';
+            },
+            showActForm() { document.getElementById('act-list-view').classList.add('hidden'); document.getElementById('act-form-view').classList.remove('hidden'); },
+            hideActForm() { document.getElementById('act-list-view').classList.remove('hidden'); document.getElementById('act-form-view').classList.add('hidden'); },
+            async saveAct(e) {
+                e.preventDefault();
+                alert('Tindak lanjut disimpan!');
+                this.hideActForm();
+            },
+            async createNewCycle(e) {
+                e.preventDefault();
+                const db = await this.getLocalStore();
+                if (!db.cycles) db.cycles = [];
+                const newId = 'c' + Date.now();
+                db.cycles.push({
+                    id: newId,
+                    title: document.getElementById('nc-title').value,
+                    problem: document.getElementById('nc-problem').value,
+                    pic: document.getElementById('nc-pic').value,
+                    status: 'Sedang Berjalan'
+                });
+                db.activeCycleId = newId;
+                await this.saveLocalStore(db);
+                this.hideNewCycleModal();
+                this.refreshAll();
+                alert('Siklus baru diinisialisasi!');
+            },
+
+            renderKombel(db) {
+                const container = document.getElementById('kombel-list-view');
+                if(container) container.innerHTML = (db.kombel || []).map(k => `<div class="p-3 bg-gray-50 rounded border text-xs"><b>${k.topik}</b>: ${k.hasil}</div>`).join('') || '<div class="p-4 text-center text-xs text-gray-400">Belum ada kegiatan Kombel.</div>';
+            },
+            showKombelForm() { document.getElementById('kombel-list-view').classList.add('hidden'); document.getElementById('kombel-form-view').classList.remove('hidden'); },
+            hideKombelForm() { document.getElementById('kombel-list-view').classList.remove('hidden'); document.getElementById('kombel-form-view').classList.add('hidden'); },
+            async saveKombel(e) {
+                e.preventDefault();
+                const db = await this.getLocalStore();
+                if(!db.kombel) db.kombel = [];
+                db.kombel.push({ tanggal: document.getElementById('kb-tanggal').value, topik: document.getElementById('kb-topik').value, hasil: document.getElementById('kb-hasil').value });
+                await this.saveLocalStore(db);
+                this.hideKombelForm();
+                this.refreshAll();
+                alert('Kombel disimpan!');
+            },
+
+            renderLs(db) {
+                const container = document.getElementById('ls-list-view');
+                if(container) container.innerHTML = (db.lessonStudy || []).map(l => `<div class="p-3 bg-gray-50 rounded border text-xs"><b>${l.kelas}</b> - ${l.guru}</div>`).join('') || '<div class="p-4 text-center text-xs text-gray-400">Belum ada Lesson Study.</div>';
+            },
+            showLsForm() { document.getElementById('ls-list-view').classList.add('hidden'); document.getElementById('ls-form-view').classList.remove('hidden'); },
+            hideLsForm() { document.getElementById('ls-list-view').classList.remove('hidden'); document.getElementById('ls-form-view').classList.add('hidden'); },
+            async saveLs(e) {
+                e.preventDefault();
+                const db = await this.getLocalStore();
+                if(!db.lessonStudy) db.lessonStudy = [];
+                db.lessonStudy.push({ tanggal: document.getElementById('ls-tanggal').value, kelas: document.getElementById('ls-kelas').value, guru: document.getElementById('ls-guru').value });
+                await this.saveLocalStore(db);
+                this.hideLsForm();
+                this.refreshAll();
+                alert('Lesson Study disimpan!');
+            },
+
+            renderTeachers(db) {
+                const tb = document.getElementById('teacher-table-body');
+                if (tb) tb.innerHTML = (db.teachers || []).map(t => `<tr class="border-b"><td class="p-3">${t.nama}</td><td class="p-3">${t.jabatan}</td><td class="p-3">${t.email}</td></tr>`).join('') || '<tr><td colspan="6" class="p-4 text-center text-xs text-gray-400">Belum ada data guru.</td></tr>';
+            },
+            showTeacherForm() { document.getElementById('teacher-form-view').classList.remove('hidden'); },
+            hideTeacherForm() { document.getElementById('teacher-form-view').classList.add('hidden'); },
+            async saveTeacher(e) {
+                e.preventDefault();
+                const db = await this.getLocalStore();
+                if(!db.teachers) db.teachers = [];
+                db.teachers.push({ nama: document.getElementById('tch-nama').value, jabatan: document.getElementById('tch-jabatan').value, email: document.getElementById('tch-email').value, status: 'Aktif' });
+                await this.saveLocalStore(db);
+                this.hideTeacherForm();
+                this.refreshAll();
+                alert('Guru disimpan!');
+            },
+
+            generatePrompt(type) {
+                let text = type === 'analisis' ? "Berikan analisis mendalam mengenai pencapaian Rapor Pendidikan D.1 Kualitas Pembelajaran." : "Buat rancangan kegiatan aksi nyata pembelajaran mendalam berbasis lingkungan sekolah.";
+                document.getElementById('ai-output').value = text;
+            },
+            copyPrompt() {
+                const t = document.getElementById('ai-output');
+                t.select();
+                document.execCommand('copy');
+                alert('Prompt disalin!');
+            },
+
+            async callGeminiAPI() {
+                const apiKey = await idbStorage.get('GEMINI_API_KEY');
+                if(!apiKey) {
+                    alert('Gemini API Key belum dikonfigurasi. Silakan klik tombol "API Key" di pojok kiri atas.');
+                    this.showApiKeyModal();
+                    return;
+                }
+                const promptText = document.getElementById('ai-output').value.trim();
+                if(!promptText) { alert('Masukkan atau pilih prompt terlebih dahulu.'); return; }
+
+                const respBox = document.getElementById('ai-response-box');
+                const respContent = document.getElementById('ai-response-content');
+                respBox.classList.remove('hidden');
+                respContent.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Menghubungkan ke Gemini AI...';
+
+                try {
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                    const payload = {
+                        contents: [{ parts: [{ text: promptText }] }],
+                        systemInstruction: { parts: [{ text: "Bertindaklah sebagai pakar kurikulum dan pendamping pendidikan dasar profesional yang ramah." }] }
+                    };
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                        respContent.textContent = candidate.content.parts[0].text;
+                    } else {
+                        respContent.textContent = 'Gagal mendapatkan respons dari Gemini AI.';
+                    }
+                } catch(err) {
+                    respContent.textContent = 'Terjadi kesalahan koneksi: ' + err.message;
+                }
+            },
+
+            renderMonitoring(db) {
+                const container = document.getElementById('monitoring-list-view');
+                if(container) {
+                    container.innerHTML = (db.monitoring || []).map(m => `<div class="p-3 bg-gray-50 rounded border text-xs"><b>${m.teacher}</b>: ${m.recommendation}</div>`).join('') || '<div class="p-4 text-center text-xs text-gray-400">Belum ada catatan observasi.</div>';
+                }
+                const sel = document.getElementById('mon-teacher');
+                if(sel) {
+                    sel.innerHTML = '<option value="">-- Pilih Guru --</option>' + (db.teachers || []).map(t => `<option value="${t.nama}">${t.nama}</option>`).join('');
+                }
+            },
+            onMonTeacherChange() {},
+            onMonCycleChange() {},
+            showMonitoringForm() { document.getElementById('monitoring-form-view').classList.remove('hidden'); },
+            hideMonitoringForm() { document.getElementById('monitoring-form-view').classList.add('hidden'); },
+            async saveMonitoring(e) {
+                e.preventDefault();
+                alert('Observasi disimpan!');
+                this.hideMonitoringForm();
+            },
+
+            async exportData() {
+                const db = await this.getLocalStore();
+                const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `GELIS_Backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+            },
+            previewImport(e) {
+                const file = e.target.files[0];
+                if(!file) return;
+                const r = new FileReader();
+                r.onload = (evt) => {
+                    try {
+                        this.importedDataPreview = JSON.parse(evt.target.result);
+                        document.getElementById('import-preview-summary').textContent = 'File JSON valid. Siap digabungkan.';
+                        document.getElementById('import-preview-box').classList.remove('hidden');
+                    } catch(err) { alert('File JSON tidak valid.'); }
+                };
+                r.readAsText(file);
+            },
+            cancelImport() { document.getElementById('import-preview-box').classList.add('hidden'); },
+            async confirmImport() {
+                if(this.importedDataPreview) {
+                    await this.saveLocalStore(this.importedDataPreview);
+                    alert('Data berhasil dipulihkan!');
+                    window.location.reload();
+                }
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
